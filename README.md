@@ -3,7 +3,7 @@
 **Sunnyvale Onions & Honey** is a full-stack ecommerce shop for a farmer selling boutique onions and specialty honey online:
 
 - Modern storefront for human shoppers
-- *Ag*entic commerce via ACP discovery and checkout APIs
+- **Ag**entic commerce via ACP discovery and checkout APIs
 - PSP portability through one routing switch
 - Evervault relay-based payment routing patterns
 - Cloudflare-first deployment using OpenNext on Workers
@@ -78,6 +78,7 @@ Use the provided env template and set real values for:
 Cloudflare notes:
 - Set secrets with `wrangler secret put` for sensitive values
 - Update `wrangler.toml` with a real KV namespace id for `SESSIONS`
+- Cloudflare Pages: add compatibility flag `nodejs_compat`
 
 ## Local testing flow
 
@@ -109,6 +110,5 @@ curl -s http://localhost:3000/.well-known/acp.json
 - **Durable Objects for checkout sessions** -- move checkout session state from KV (eventually consistent) to a Durable Object or single-coordinator pattern with strict idempotency. KV is a poor fit for mutable transaction records with create/update/complete lifecycle.
 - **Product feed enrichment** -- add checkout-eligibility flags, seller policy links, return-policy data, shipping metadata, and absolute media URLs to the `/api/products` feed to align with current commerce feed specs.
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.
-- **Blog/cross-doc alignment** -- the blog post still references Netlify Functions; update to match the Cloudflare Workers deployment model in the PRD.
 - **Stored-credential compliance** -- document card-network stored-credential programme requirements for reusing Evervault-encrypted card data across sessions.
 - **Enclave payment broker** -- move PSP credentials from Worker secrets into an Evervault Enclave, leaving only an Evervault-scoped invoke secret in edge runtime.
