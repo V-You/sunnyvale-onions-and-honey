@@ -44,9 +44,20 @@ export async function POST(
   const body = await request.json();
   const pm: PaymentMethod = body.payment_method;
 
-  if (!pm || pm.type !== "card" || !pm.card_number || !pm.cvv) {
+  if (
+    !pm ||
+    pm.type !== "card" ||
+    typeof pm.card_number !== "string" ||
+    typeof pm.expiry_month !== "string" ||
+    typeof pm.expiry_year !== "string" ||
+    typeof pm.cvv !== "string" ||
+    !pm.card_number ||
+    !pm.expiry_month ||
+    !pm.expiry_year ||
+    !pm.cvv
+  ) {
     return NextResponse.json(
-      { error: "Valid payment_method with card data is required" },
+      { error: "Valid payment_method with encrypted card data is required" },
       { status: 400 },
     );
   }

@@ -96,8 +96,8 @@ curl -s http://localhost:3000/.well-known/acp.json
 
 ## Implementation notes
 
-- Checkout form is currently demo-mode card input.
-- Production intent is browser-side tokenization/encryption with Evervault UI components.
+- Checkout form uses Evervault UI Components for browser-side card encryption.
+- Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID` in your env.
 - Current order response uses PSP IDs directly. Future separate merchant order model: see below.
 - Checkout session persistence uses KV. Future hardening: see below.
 

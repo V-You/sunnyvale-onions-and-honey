@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Card, EvervaultProvider, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
 
@@ -9,10 +10,26 @@ interface CartEntry {
   quantity: number;
 }
 
+interface EncryptedCardDetails {
+  card_number: string;
+  expiry_month: string;
+  expiry_year: string;
+  cvv: string;
+}
+
+const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
+const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
+const EVERVAULT_CONFIGURED =
+  EVERVAULT_APP_ID.length > 0 && EVERVAULT_TEAM_ID.length > 0;
+
 export default function CheckoutForm({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cardComplete, setCardComplete] = useState(false);
+  const [encryptedCard, setEncryptedCard] =
+    useState<EncryptedCardDetails | null>(null);
+  const [evervaultLoadError, setEvervaultLoadError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,6 +41,33 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
     const product = products.find((p) => p.sku === entry.sku);
     return sum + (product ? product.price_cents * entry.quantity : 0);
   }, 0);
+
+  function handleCardUpdate(payload: CardPayload) {
+    const isReady = payload.isComplete && payload.isValid;
+    setCardComplete(isReady);
+
+    if (!isReady) {
+      setEncryptedCard(null);
+      return;
+    }
+
+    const number = payload.card.number;
+    const month = payload.card.expiry.month;
+    const year = payload.card.expiry.year;
+    const cvc = payload.card.cvc;
+
+    if (!number || !month || !year || !cvc) {
+      setEncryptedCard(null);
+      return;
+    }
+
+    setEncryptedCard({
+      card_number: number,
+      expiry_month: month,
+      expiry_year: year,
+      cvv: cvc,
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,11 +89,17 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
 
       const session = await sessionResp.json();
 
-      // step 2: get card data from form
-      // in production, this would be Evervault-encrypted ev:ct:xxx tokens
-      // for demo, we read plain test card values from the form
-      const form = e.currentTarget;
-      const formData = new FormData(form);
+      if (!EVERVAULT_CONFIGURED) {
+        throw new Error(
+          "Evervault is not configured. Set NEXT_PUBLIC_EVERVAULT_TEAM_ID and NEXT_PUBLIC_EVERVAULT_APP_ID.",
+        );
+      }
+      if (evervaultLoadError) {
+        throw new Error("Evervault UI Components failed to load.");
+      }
+      if (!cardComplete || !encryptedCard) {
+        throw new Error("Enter valid card details before submitting.");
+      }
 
       // step 3: complete checkout
       const completeResp = await fetch(
@@ -63,10 +113,10 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
           body: JSON.stringify({
             payment_method: {
               type: "card",
-              card_number: formData.get("card_number"),
-              expiry_month: formData.get("expiry_month"),
-              expiry_year: formData.get("expiry_year"),
-              cvv: formData.get("cvv"),
+              card_number: encryptedCard.card_number,
+              expiry_month: encryptedCard.expiry_month,
+              expiry_year: encryptedCard.expiry_year,
+              cvv: encryptedCard.cvv,
             },
           }),
         },
@@ -126,61 +176,46 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       </div>
 
       {/* card fields */}
-      {/* in production, this section would be replaced by Evervault UI Components */}
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-lg">Payment details</h2>
-        <p className="text-xs text-gray-400">
-          Demo mode -- enter test card numbers. In production, Evervault UI Components encrypt card data in the browser.
-        </p>
-        <div>
-          <label htmlFor="card_number" className="block text-sm font-medium mb-1">Card number</label>
-          <input
-            id="card_number"
-            name="card_number"
-            type="text"
-            required
-            placeholder="4200000000000000"
-            className="w-full border rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label htmlFor="expiry_month" className="block text-sm font-medium mb-1">Month</label>
-            <input
-              id="expiry_month"
-              name="expiry_month"
-              type="text"
-              required
-              placeholder="12"
-              maxLength={2}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor="expiry_year" className="block text-sm font-medium mb-1">Year</label>
-            <input
-              id="expiry_year"
-              name="expiry_year"
-              type="text"
-              required
-              placeholder="2028"
-              maxLength={4}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor="cvv" className="block text-sm font-medium mb-1">CVV</label>
-            <input
-              id="cvv"
-              name="cvv"
-              type="text"
-              required
-              placeholder="123"
-              maxLength={4}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
+        {EVERVAULT_CONFIGURED ? (
+          <>
+            <p className="text-xs text-gray-500">
+              Card details are encrypted in the browser by Evervault before they
+              are submitted.
+            </p>
+            <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+              <EvervaultProvider
+                appId={EVERVAULT_APP_ID}
+                teamId={EVERVAULT_TEAM_ID}
+                onLoadError={() => setEvervaultLoadError(true)}
+              >
+                <Card
+                  onChange={handleCardUpdate}
+                  onComplete={handleCardUpdate}
+                  onError={() => setEvervaultLoadError(true)}
+                  autoFocus
+                />
+              </EvervaultProvider>
+            </div>
+            {!cardComplete && (
+              <p className="text-xs text-amber-700">
+                Enter complete card details to continue.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-red-700 bg-red-50 rounded-lg p-3">
+            Evervault is not configured. Add
+            {" "}NEXT_PUBLIC_EVERVAULT_TEAM_ID and
+            {" "}NEXT_PUBLIC_EVERVAULT_APP_ID.
+          </p>
+        )}
+        {evervaultLoadError && (
+          <p className="text-sm text-red-700 bg-red-50 rounded-lg p-3">
+            Evervault UI Components failed to load. Please refresh and try again.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -191,10 +226,18 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={
+          submitting ||
+          !EVERVAULT_CONFIGURED ||
+          evervaultLoadError ||
+          !cardComplete ||
+          !encryptedCard
+        }
         className="w-full py-3 rounded-lg font-semibold text-white bg-[var(--color-green-dark)] hover:bg-[var(--color-green-mid)] transition-colors disabled:opacity-60"
       >
-        {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)}`}
+        {submitting
+          ? "Processing..."
+          : `Pay $${(total / 100).toFixed(2)}`}
       </button>
     </form>
   );
