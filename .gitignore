@@ -8,6 +8,13 @@ Sunnyvale-OH*.md
 tmp/
 md/
 
+# Node / Next.js
+node_modules/
+.next/
+.open-next/
+out/
+next-env.d.ts
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

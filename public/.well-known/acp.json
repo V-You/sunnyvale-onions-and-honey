@@ -1,0 +1,18 @@
+{
+  "schema_version": "2024-11-12",
+  "name": "Sunnyvale Onions & Honey",
+  "description": "Boutique organic onions and specialty honey. Supports automated checkout via ACP.",
+  "logo_url": "/logo.png",
+  "contact_email": "farmer@sunnyvale.example",
+  "capabilities": {
+    "commerce": {
+      "acp_version": "2024-11-12",
+      "product_feed_url": "/api/products",
+      "checkout_session_url": "/api/checkout_sessions"
+    }
+  },
+  "security": {
+    "encryption_provider": "evervault",
+    "public_key_url": "https://api.evervault.com/app_83ec49c3a3f6/public-key"
+  }
+}
