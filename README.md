@@ -98,6 +98,7 @@ curl -s http://localhost:3000/.well-known/acp.json
 
 - Checkout form uses Evervault UI Components for browser-side card encryption.
 - Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID` in your env.
+- Future hardening path: move PSP calls into an Evervault Enclave payment broker so ACI and Stripe secrets are removed from the Worker.
 - Current order response uses PSP IDs directly. Future separate merchant order model: see below.
 - Checkout session persistence uses KV. Future hardening: see below.
 
@@ -111,3 +112,4 @@ curl -s http://localhost:3000/.well-known/acp.json
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.
 - **Blog/cross-doc alignment** -- the blog post still references Netlify Functions; update to match the Cloudflare Workers deployment model in the PRD.
 - **Stored-credential compliance** -- document card-network stored-credential programme requirements for reusing Evervault-encrypted card data across sessions.
+- **Enclave payment broker** -- move PSP credentials from Worker secrets into an Evervault Enclave, leaving only an Evervault-scoped invoke secret in edge runtime.

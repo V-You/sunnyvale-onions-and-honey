@@ -2,15 +2,14 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AddToCartButton from "@/components/AddToCartButton";
-import { getProductBySku, getAllProducts } from "@/lib/catalog";
+import { getProductBySku } from "@/lib/catalog";
 import type { Metadata } from "next";
+
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ sku: string }>;
-}
-
-export async function generateStaticParams() {
-  return getAllProducts().map((p) => ({ sku: p.sku }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

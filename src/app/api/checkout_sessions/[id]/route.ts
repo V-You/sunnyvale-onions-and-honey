@@ -3,6 +3,8 @@ import { getProductBySku } from "@/lib/catalog";
 import type { CheckoutSession, CartItem } from "@/lib/types";
 import { getSessionsKV } from "@/lib/kv";
 
+export const runtime = "edge";
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
