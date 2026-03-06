@@ -1,11 +1,10 @@
-# Sunnyvale Onions & Honey online shop
+# Sunnyvale Onions & Honey
 
-Sunnyvale Onions & Honey is a full-stack ecommerce demo for a farmer selling boutique onions and specialty honey online.
+**Sunnyvale Onions & Honey** is a full-stack ecommerce shop for a farmer selling boutique onions and specialty honey online:
 
-The project demonstrates:
 - Modern storefront for human shoppers
-- Agent-friendly commerce via ACP discovery and checkout APIs
-- PSP portability between ACI and Stripe through one routing switch
+- *Ag*entic commerce via ACP discovery and checkout APIs
+- PSP portability through one routing switch
 - Evervault relay-based payment routing patterns
 - Cloudflare-first deployment using OpenNext on Workers
 
@@ -29,12 +28,12 @@ The project demonstrates:
 
 ## Stack
 
-- frontend and api: Next.js 15, React 19, TypeScript
-- styling: Tailwind CSS v4
-- deployment target: Cloudflare Workers via OpenNext
-- infra tooling: Wrangler
-- security integration surface: Evervault (relay pattern)
-- cms direction: TinaCMS config is present
+- Frontend and api: Next.js 15, React 19, TypeScript
+- Styling: Tailwind CSS v4
+- Deployment target: Cloudflare Workers via OpenNext
+- Infra tooling: Wrangler
+- Security integration surface: Evervault (relay pattern)
+- CMS direction: TinaCMS config is present
 
 ## Quick start
 
@@ -93,18 +92,18 @@ Example API checks:
 curl -s http://localhost:3000/api/products
 curl -s http://localhost:3000/.well-known/acp.json
 ```
-
-## Implementation notes
-
-- Checkout form uses Evervault UI Components for browser-side card encryption.
-- Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID` in your env.
-- Future hardening path: move PSP calls into an Evervault Enclave payment broker so ACI and Stripe secrets are removed from the Worker.
-- Current order response uses PSP IDs directly. Future separate merchant order model: see below.
-- Checkout session persistence uses KV. Future hardening: see below.
-
 ---
 
-# Future
+## Notes
+
+- Checkout form uses Evervault UI Components for browser-side card encryption.
+- Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID`.
+- Future: move PSP calls into Evervault Enclave, to remove PSP secrets from CF Worker.
+- Current order response uses PSP IDs. Future: separate merchant order model, see below.
+- Checkout session persistence uses KV. Future hardening: see below.
+
+
+## Future
 
 - **Merchant order model** -- introduce a proper order object with its own `order_id`, keeping PSP transaction IDs separate. Needed for reconciliation, refunds, and webhook-driven flows.
 - **Durable Objects for checkout sessions** -- move checkout session state from KV (eventually consistent) to a Durable Object or single-coordinator pattern with strict idempotency. KV is a poor fit for mutable transaction records with create/update/complete lifecycle.
