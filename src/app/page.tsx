@@ -16,10 +16,10 @@ export default function Home() {
       <section className="bg-[var(--color-green-dark)] text-[var(--color-cream)] py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
-            Root access to your produce
+            Get root access to your produce
           </h1>
           <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">
-            Boutique onions and specialty honey from Sunnyvale. Bot-to-table fresh. Ag-entic commerce ready.
+            Boutique onions and specialty honey from Sunnyvale. Bot-to-table fresh.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
