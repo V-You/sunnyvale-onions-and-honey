@@ -13,4 +13,4 @@ ALLOWED_ORIGINS = "http://localhost:3000,https://sunnyvale-oh.pages.dev"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "placeholder"
+id = "sunnyvale-onions-and-honey"
