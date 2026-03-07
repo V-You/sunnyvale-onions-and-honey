@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cf:build": "npx @opennextjs/cloudflare",
-    "cf:deploy": "npm run cf:build && npx wrangler deploy"
+    "cf:build": "npx @opennextjs/cloudflare build",
+    "cf:deploy": "npm run cf:build && npx @opennextjs/cloudflare deploy"
   },
   "dependencies": {
     "@evervault/react": "^2.0.0",

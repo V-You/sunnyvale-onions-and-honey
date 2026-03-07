@@ -4,8 +4,6 @@ import Footer from "@/components/Footer";
 import AddToCartButton from "@/components/AddToCartButton";
 import { getProductBySku } from "@/lib/catalog";
 import type { Metadata } from "next";
-
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 interface Props {
