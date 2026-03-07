@@ -62,7 +62,7 @@ npm run cf:build
 npm run cf:deploy
 ```
 
-## Environment setup
+## Environment setup 
 
 Use the provided env template and set real values for:
 - EV_API_KEY
