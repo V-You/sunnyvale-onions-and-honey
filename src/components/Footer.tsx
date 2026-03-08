@@ -54,7 +54,20 @@ const footerEntries: FooterModalEntry[] = [
     sections: [
       {
         body:
-          "Placeholder copy. Add the farm story, sourcing notes, contact details, shipping information, or anything else you want visitors to see here later.",
+          (
+            <>
+              <p>This demo shows that a merchant can:</p>
+              <ul>
+                <li><strong>Own 100% of their tokenized card data</strong>  &nbsp;  Not locked into any payment provider's vault</li>
+                <li><strong>Stay PCI-compliant (SAQ A)</strong>  &nbsp;  Without ever handling plaintext PANs</li>
+                <li><strong>Hot-swap payment processors with a config change</strong>  &nbsp;  Switch PSPs via env var and redeploy</li>
+                <li><strong>Serve AI shopping agents</strong>  &nbsp;  Via the Agentic Commerce Protocol (ACP), alongside human shoppers</li>
+                <li><strong>Stay processor-agnostic for agentic payments</strong>  &nbsp;  Not locked into whichever PSP the agent prefers</li>
+              </ul>
+              <p>The demo shop uses <a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips.
+              </p>
+            </>
+          ),
       },
     ],
   },
@@ -71,7 +84,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-[var(--color-green-dark)] text-[var(--color-cream)] px-6 py-8 mt-auto">
+      <footer className="bg-[var( &nbsp; color-green-dark)] text-[var( &nbsp; color-cream)] px-6 py-8 mt-auto">
         <div className="max-w-6xl mx-auto text-center text-sm opacity-80">
           <p>&copy; {new Date().getFullYear()} Sunnyvale Onions &amp; Honey</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs opacity-60">
@@ -103,7 +116,7 @@ export default function Footer() {
               className="rounded-2xl bg-white/70 p-5 shadow-sm"
             >
               {section.heading && (
-                <h3 className="text-lg font-semibold text-[var(--color-green-dark)]">
+                <h3 className="text-lg font-semibold text-[var( &nbsp; color-green-dark)]">
                   {section.heading}
                 </h3>
               )}
