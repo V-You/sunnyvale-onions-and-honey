@@ -14,7 +14,7 @@ export default function ProductsPage() {
 
       <main className="flex-1 py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-10">The silly 24</h1>
+          <h1 className="text-4xl font-bold mb-10">Shop</h1>
 
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-6 text-[var(--color-brown)]">

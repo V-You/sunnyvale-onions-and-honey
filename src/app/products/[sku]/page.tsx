@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AddToCartButton from "@/components/AddToCartButton";
+import ProductImage from "@/components/ProductImage";
 import { getProductBySku } from "@/lib/catalog";
 import type { Metadata } from "next";
 
@@ -60,10 +61,15 @@ export default async function ProductDetailPage({ params }: Props) {
       <main className="flex-1 py-12 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-10">
-            {/* product image placeholder */}
-            <div className="aspect-square bg-gradient-to-br from-amber-50 to-green-50 rounded-2xl flex items-center justify-center text-8xl">
-              {product.category === "honey" ? "\u{1F36F}" : "\u{1F9C5}"}
-            </div>
+            <ProductImage
+              src={product.image_url}
+              alt={product.name}
+              category={product.category}
+              priority
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="aspect-square rounded-2xl bg-gradient-to-br from-amber-50 to-green-50"
+              imageClassName="h-full w-full object-contain p-6"
+            />
 
             {/* product info */}
             <div>
