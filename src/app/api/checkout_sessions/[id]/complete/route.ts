@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
+import { resolveMerchantSavedPaymentMethod } from "@/lib/merchant-saved-payment-methods";
 import type {
   CardPaymentMethod,
   CheckoutSession,
   PaymentMethod,
   Env,
+  MerchantSavedPaymentMethod,
+  PaymentFlowName,
   SavedEvervaultPaymentMethod,
   StripeSharedPaymentTokenMethod,
 } from "@/lib/types";
@@ -20,6 +23,12 @@ function isEncryptedCardPaymentMethod(
   paymentMethod: PaymentMethod,
 ): paymentMethod is CardPaymentMethod | SavedEvervaultPaymentMethod {
   return paymentMethod.type === "card" || paymentMethod.type === "saved_evervault";
+}
+
+function isMerchantSavedPaymentMethod(
+  paymentMethod: PaymentMethod,
+): paymentMethod is MerchantSavedPaymentMethod {
+  return paymentMethod.type === "merchant_saved_payment";
 }
 
 function hasValidEncryptedCardData(
@@ -123,7 +132,35 @@ export async function POST(
     );
   }
 
-  if (isEncryptedCardPaymentMethod(pm) && !hasValidEncryptedCardData(pm)) {
+  let processorPaymentMethod: PaymentMethod = pm;
+  let paymentFlow: PaymentFlowName = pm.type;
+
+  if (isMerchantSavedPaymentMethod(pm)) {
+    const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
+      pm.payment_method_id,
+    );
+
+    if (!resolvedPaymentMethod) {
+      return corsJson(
+        origin,
+        env,
+        {
+          error:
+            "Unknown merchant_saved_payment id. Request a fresh checkout session and use one of the advertised merchant_saved_payment_methods.",
+        },
+        { status: 400 },
+        CHECKOUT_COMPLETE_METHODS,
+      );
+    }
+
+    processorPaymentMethod = resolvedPaymentMethod;
+    paymentFlow = "merchant_saved_payment";
+  }
+
+  if (
+    isEncryptedCardPaymentMethod(processorPaymentMethod) &&
+    !hasValidEncryptedCardData(processorPaymentMethod)
+  ) {
     return corsJson(
       origin,
       env,
@@ -136,7 +173,10 @@ export async function POST(
     );
   }
 
-  if (pm.type === "stripe_spt" && !hasValidDelegatedStripeToken(pm)) {
+  if (
+    processorPaymentMethod.type === "stripe_spt" &&
+    !hasValidDelegatedStripeToken(processorPaymentMethod)
+  ) {
     return corsJson(
       origin,
       env,
@@ -149,13 +189,16 @@ export async function POST(
     );
   }
 
-  if (!isEncryptedCardPaymentMethod(pm) && pm.type !== "stripe_spt") {
+  if (
+    !isEncryptedCardPaymentMethod(processorPaymentMethod) &&
+    processorPaymentMethod.type !== "stripe_spt"
+  ) {
     return corsJson(
       origin,
       env,
       {
         error:
-          "Unsupported payment_method type. Use card, saved_evervault, or stripe_spt.",
+          "Unsupported payment_method type. Use card, merchant_saved_payment, saved_evervault, or stripe_spt.",
       },
       { status: 400 },
       CHECKOUT_COMPLETE_METHODS,
@@ -163,7 +206,12 @@ export async function POST(
   }
 
   try {
-    const result = await routeToPSP(env as Env, session, pm);
+    const result = await routeToPSP(
+      env as Env,
+      session,
+      processorPaymentMethod,
+    );
+    result.payment_flow = paymentFlow;
 
     session.status = result.success ? "completed" : "failed";
     session.order_id = result.order_id || undefined;

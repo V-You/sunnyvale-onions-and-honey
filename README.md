@@ -18,6 +18,7 @@
 - API endpoints: `GET /api/products`, `POST /api/checkout_sessions`, `GET /api/checkout_sessions/:id`, `PATCH /api/checkout_sessions/:id`, `POST /api/checkout_sessions/:id/complete`
 - PSP router for ACI and Stripe, controlled by `ACTIVE_PSP`
 - Delegated Stripe token path via confirmation token or PaymentMethod ID when Stripe is active
+- Merchant-side demo saved payment method exposed in checkout session responses for ACP clients
 - Saved Evervault-encrypted payment payload reuse on the checkout page
 - Filterable product explorer and cart-side processor query history
 - Metrics dashboard with real checkout timings plus repeatable product/session probe runs
@@ -133,7 +134,7 @@ curl -s http://localhost:3000/.well-known/acp.json
 ## Future
 
 - **Merchant order model** -- introduce a proper order object with its own `order_id`, keeping PSP transaction IDs separate. Needed for reconciliation, refunds, and webhook-driven flows.
-- **Merchant customer ID** -- similar to the above, allow agent to ask merchant for stored cards of customer
+- **Customer-linked merchant vault** -- evolve the demo merchant-side saved payment method into a real customer-linked saved payment catalog so agents can request stored cards by merchant customer ID instead of relying on browser localStorage.
 - **Durable Objects for checkout sessions** -- move checkout session state from KV (eventually consistent) to a Durable Object or single-coordinator pattern with strict idempotency. KV is a poor fit for mutable transaction records with create/update/complete lifecycle.
 - **Product feed enrichment** -- add checkout-eligibility flags, seller policy links, return-policy data, shipping metadata, and absolute media URLs to the `/api/products` feed to align with current commerce feed specs.
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.

@@ -30,7 +30,11 @@ export interface CartItem {
 }
 
 export type PSPName = "aci" | "stripe";
-export type PaymentFlowName = "card" | "saved_evervault" | "stripe_spt";
+export type PaymentFlowName =
+  | "card"
+  | "saved_evervault"
+  | "merchant_saved_payment"
+  | "stripe_spt";
 export type ProcessorQueryLookupMode =
   | "psp_transaction_id"
   | "merchant_transaction_id";
@@ -46,6 +50,25 @@ export interface PaymentMetrics {
   steps: PaymentMetricStep[];
 }
 
+export interface CheckoutCapabilities {
+  payment_methods: string[];
+}
+
+export interface MerchantSavedPaymentDisplayMetadata {
+  brand?: string;
+  last4?: string;
+  cardholder_name?: string;
+  processor?: PSPName;
+  source?: "merchant_demo";
+}
+
+export interface MerchantSavedPaymentOption {
+  id: string;
+  display_name: string;
+  display_metadata?: MerchantSavedPaymentDisplayMetadata;
+  demo?: boolean;
+}
+
 // checkout session (KV-stored)
 export interface CheckoutSession {
   id: string;
@@ -54,6 +77,8 @@ export interface CheckoutSession {
   amount_total_cents: number;
   currency: string;
   allowed_payment_methods: string[];
+  capabilities?: CheckoutCapabilities;
+  merchant_saved_payment_methods?: MerchantSavedPaymentOption[];
   created_at: number;
   order_id?: string;
   merchant_transaction_id?: string;
@@ -85,6 +110,11 @@ export interface SavedEvervaultPaymentMethod {
   card_holder?: string;
 }
 
+export interface MerchantSavedPaymentMethod {
+  type: "merchant_saved_payment";
+  payment_method_id: string;
+}
+
 export interface StripeSharedPaymentTokenMethod {
   type: "stripe_spt";
   payment_method_id?: string;
@@ -94,6 +124,7 @@ export interface StripeSharedPaymentTokenMethod {
 export type PaymentMethod =
   | CardPaymentMethod
   | SavedEvervaultPaymentMethod
+  | MerchantSavedPaymentMethod
   | StripeSharedPaymentTokenMethod;
 
 // PSP router result

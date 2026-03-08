@@ -19,7 +19,7 @@ export default function Home() {
             Get root access to produce
           </h1>
           <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">
-            Boutique onions &nbsp; specialty honey from Sunnyvale. Bot-to-table fresh.
+            Boutique onions & specialty honey from Sunnyvale. Bot-to-table fresh.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link

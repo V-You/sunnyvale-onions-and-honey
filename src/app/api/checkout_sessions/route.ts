@@ -3,6 +3,7 @@ import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
+import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
 import type { CheckoutSession, CartItem } from "@/lib/types";
 
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
     (sum, i) => sum + i.price_cents * i.quantity,
     0,
   );
+  const merchantSavedPaymentMethods = getMerchantSavedPaymentMethods(
+    env.ACTIVE_PSP,
+  );
+  const allowedPaymentMethods = ["card", "merchant_saved_payment"];
 
   const session: CheckoutSession = {
     id: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -92,7 +97,11 @@ export async function POST(request: NextRequest) {
     items: cartItems,
     amount_total_cents: amountTotal,
     currency: "USD",
-    allowed_payment_methods: ["card"],
+    allowed_payment_methods: allowedPaymentMethods,
+    capabilities: {
+      payment_methods: allowedPaymentMethods,
+    },
+    merchant_saved_payment_methods: merchantSavedPaymentMethods,
     created_at: Date.now(),
   };
 

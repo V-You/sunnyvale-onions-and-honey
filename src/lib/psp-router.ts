@@ -152,6 +152,19 @@ export async function routeToPSP(
     };
   }
 
+  if (!isEncryptedCardPaymentMethod(paymentMethod)) {
+    return {
+      success: false,
+      order_id: "",
+      psp_transaction_id: "",
+      processor: psp === "stripe" ? "stripe" : "aci",
+      payment_flow: paymentMethod.type,
+      merchant_transaction_id: session.merchant_transaction_id ?? session.id,
+      error:
+        "Merchant-side saved payments must be resolved to card data before processor routing.",
+    };
+  }
+
   return routeToACI(env, session, paymentMethod);
 }
 
