@@ -4,6 +4,8 @@ export interface Product {
   name: string;
   category: "onion" | "honey";
   price_cents: number;
+  on_sale: boolean;
+  sale_percent_off: number;
   currency: string;
   description: string;
   short_tagline: string;

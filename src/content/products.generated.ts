@@ -24,7 +24,9 @@ const products: Product[] = [
       "artisan"
     ],
     "image_url": "/images/honey_01.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_02",
@@ -49,13 +51,17 @@ const products: Product[] = [
       "gift-box"
     ],
     "image_url": "/images/honey_02.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_03",
     "name": "Space Dust Honey",
     "category": "honey",
     "price_cents": 2200,
+    "on_sale": true,
+    "sale_percent_off": 18,
     "currency": "USD",
     "description": "Infused with holographic edible glitter. A sparkly, citrus honey that is out of this world.",
     "short_tagline": "Literally out of this world",
@@ -99,13 +105,17 @@ const products: Product[] = [
       "limited-edition"
     ],
     "image_url": "/images/honey_04.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_05",
     "name": "Ghost Pepper Honey",
     "category": "honey",
     "price_cents": 1200,
+    "on_sale": false,
+    "sale_percent_off": 0,
     "currency": "USD",
     "description": "Sweet meets heat in this amber-red inferno. Not for the faint of heart (or tongue).",
     "short_tagline": "Sweet heat for the brave",
@@ -124,7 +134,7 @@ const products: Product[] = [
       "challenge"
     ],
     "image_url": "/images/honey_05.webp",
-    "in_stock": true
+    "in_stock": false
   },
   {
     "sku": "honey_06",
@@ -149,7 +159,9 @@ const products: Product[] = [
       "gentle"
     ],
     "image_url": "/images/honey_06.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_07",
@@ -174,7 +186,9 @@ const products: Product[] = [
       "bee-themed"
     ],
     "image_url": "/images/honey_07.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_08",
@@ -199,7 +213,9 @@ const products: Product[] = [
       "cooking"
     ],
     "image_url": "/images/honey_08.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_09",
@@ -226,13 +242,17 @@ const products: Product[] = [
       "health"
     ],
     "image_url": "/images/honey_09.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_10",
     "name": "Midnight Blossom",
     "category": "honey",
     "price_cents": 3000,
+    "on_sale": true,
+    "sale_percent_off": 27,
     "currency": "USD",
     "description": "A near-black buckwheat honey with an intense, complex taste. For the connoisseur who's seen everything.",
     "short_tagline": "Darkness you can taste",
@@ -276,13 +296,17 @@ const products: Product[] = [
       "gift-box"
     ],
     "image_url": "/images/honey_11.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "honey_12",
     "name": "Bumble-Blackout",
     "category": "honey",
     "price_cents": 1400,
+    "on_sale": false,
+    "sale_percent_off": 0,
     "currency": "USD",
     "description": "A dark brown honey with a malty, rich depth. Bold enough to stand up to strong cheese and dark bread.",
     "short_tagline": "Bold move in a jar",
@@ -301,7 +325,7 @@ const products: Product[] = [
       "bold"
     ],
     "image_url": "/images/honey_12.webp",
-    "in_stock": true
+    "in_stock": false
   },
   {
     "sku": "onion_01",
@@ -326,13 +350,17 @@ const products: Product[] = [
       "bold"
     ],
     "image_url": "/images/onion_01.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_02",
     "name": "Breath-Taker Shallots",
     "category": "onion",
     "price_cents": 650,
+    "on_sale": false,
+    "sale_percent_off": 0,
     "currency": "USD",
     "description": "Elegant golden-brown shallots with a buttery, mild flavor. Perfect for gourmet dishes and impressing dinner guests.",
     "short_tagline": "Delicate enough for a first date",
@@ -351,7 +379,7 @@ const products: Product[] = [
       "delicate"
     ],
     "image_url": "/images/onion_02.webp",
-    "in_stock": true
+    "in_stock": false
   },
   {
     "sku": "onion_03",
@@ -376,13 +404,17 @@ const products: Product[] = [
       "signature"
     ],
     "image_url": "/images/onion_03.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_04",
     "name": "The Sweetest Sob",
     "category": "onion",
     "price_cents": 525,
+    "on_sale": true,
+    "sale_percent_off": 14,
     "currency": "USD",
     "description": "A pale yellow vidalia-style onion so mellow it might make you emotional. Sweet as can be.",
     "short_tagline": "Very low latency, high sweetness",
@@ -426,7 +458,9 @@ const products: Product[] = [
       "snack"
     ],
     "image_url": "/images/onion_05.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_06",
@@ -451,7 +485,9 @@ const products: Product[] = [
       "soup"
     ],
     "image_url": "/images/onion_06.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_07",
@@ -476,7 +512,9 @@ const products: Product[] = [
       "basic"
     ],
     "image_url": "/images/onion_07.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_08",
@@ -501,13 +539,17 @@ const products: Product[] = [
       "gift-box"
     ],
     "image_url": "/images/onion_08.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_09",
     "name": "Cyber-Sizzlers",
     "category": "onion",
     "price_cents": 600,
+    "on_sale": true,
+    "sale_percent_off": 23,
     "currency": "USD",
     "description": "Neon red onions with a smoky, charred personality. Born to be grilled.",
     "short_tagline": "Fire up the grill",
@@ -551,13 +593,17 @@ const products: Product[] = [
       "bold"
     ],
     "image_url": "/images/onion_10.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   },
   {
     "sku": "onion_11",
     "name": "Peel-Me-Maybe",
     "category": "onion",
     "price_cents": 400,
+    "on_sale": false,
+    "sale_percent_off": 0,
     "currency": "USD",
     "description": "A crisp, fresh light red onion. Perfect raw in salads -- this one wants to be peeled.",
     "short_tagline": "Call me, peel me, maybe",
@@ -576,7 +622,7 @@ const products: Product[] = [
       "raw"
     ],
     "image_url": "/images/onion_11.webp",
-    "in_stock": true
+    "in_stock": false
   },
   {
     "sku": "onion_12",
@@ -601,7 +647,9 @@ const products: Product[] = [
       "cheap"
     ],
     "image_url": "/images/onion_12.webp",
-    "in_stock": true
+    "in_stock": true,
+    "on_sale": false,
+    "sale_percent_off": 0
   }
 ];
 

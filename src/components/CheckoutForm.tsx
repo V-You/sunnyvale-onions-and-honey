@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { Card, EvervaultProvider, themes, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
 import {
+  formatProductPrice,
+  getProductEffectivePriceCents,
+} from "@/lib/product-pricing";
+import {
   addSavedPaymentMethod,
   loadSavedPaymentMethods,
 } from "@/lib/saved-payment-methods";
@@ -130,7 +134,7 @@ function resolveCartItems(cart: CartEntry[], products: Product[]): CartItem[] {
       sku: entry.sku,
       name: product?.name ?? entry.sku,
       quantity: entry.quantity,
-      price_cents: product?.price_cents ?? 0,
+      price_cents: product ? getProductEffectivePriceCents(product) : 0,
     };
   });
 }
@@ -202,7 +206,7 @@ export default function CheckoutForm(
 
   const total = cart.reduce((sum, entry) => {
     const product = products.find((candidate) => candidate.sku === entry.sku);
-    return sum + (product ? product.price_cents * entry.quantity : 0);
+    return sum + (product ? getProductEffectivePriceCents(product) * entry.quantity : 0);
   }, 0);
 
   function persistTransactionHistory(payload: unknown, currency: string) {
@@ -745,7 +749,7 @@ export default function CheckoutForm(
                   {product?.name ?? entry.sku} x {entry.quantity}
                 </span>
                 <span>
-                  ${product ? ((product.price_cents * entry.quantity) / 100).toFixed(2) : "?"}
+                  ${product ? formatProductPrice(getProductEffectivePriceCents(product) * entry.quantity) : "?"}
                 </span>
               </li>
             );

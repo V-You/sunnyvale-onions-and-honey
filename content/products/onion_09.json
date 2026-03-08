@@ -3,6 +3,8 @@
   "name": "Cyber-Sizzlers",
   "category": "onion",
   "price_cents": 600,
+  "on_sale": true,
+  "sale_percent_off": 23,
   "currency": "USD",
   "description": "Neon red onions with a smoky, charred personality. Born to be grilled.",
   "short_tagline": "Fire up the grill",

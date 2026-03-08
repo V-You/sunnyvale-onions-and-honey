@@ -25,8 +25,17 @@ const footerEntries: FooterModalEntry[] = [
     sections: [
       {
         heading: "Agent-friendly",
-        body:
-          "AI shopping agents can discover products and buy through <a href='https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json'>ACP</a>. The shop speaks both human and machine, with a public manifest and checkout session APIs that are designed for automated clients.",
+        body: (
+          <>
+            <p>
+              AI shopping agents can discover products and buy through{" "}
+              <u><a href="https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json">ACP</a></u>.
+            </p>
+            <p>
+              The shop speaks both human and machine, with a public manifest and checkout session APIs that are designed for automated clients.
+            </p>
+          </>
+        ),
       },
     ],
   },
@@ -36,14 +45,14 @@ const footerEntries: FooterModalEntry[] = [
     title: "Powered by Evervault",
     sections: [
       {
-        heading: "You own your data",
+        heading: "Merchant-owned data",
         body:
           "Card data is encrypted with Evervault before it reaches the payment routing layer. Sunnyvale keeps control of the tokenized payment data instead of handing ownership to a single PSP vault.",
       },
       {
-        heading: "Switch PSPs instantly",
+        heading: "Switch PSPs on demand",
         body:
-          "ACI or Stripe - update configuration and redeploy. The same encrypted card payloads can be routed through either PSP without a token migration project.",
+          "ACI or Stripe or PSP3 - update configuration and redeploy. The same encrypted card payload is routed through either PSP. No token migration project.",
       },
     ],
   },
@@ -53,18 +62,19 @@ const footerEntries: FooterModalEntry[] = [
     title: "About",
     sections: [
       {
+        heading: "This demo shows that a merchant can:",
         body:
           (
             <>
-              <p>This demo shows that a merchant can:</p>
               <ul>
                 <li><strong>Own 100% of their tokenized card data</strong> without vendor lock-in (PSP vaults).</li>
                 <li><strong>Stay PCI-compliant (SAQ A)</strong> without ever handling card data.</li>
                 <li><strong>Hot-swap payment processors</strong>  in seconds via env var and redeploy.</li>
-                <li><strong>Serve AI shopping agents</strong> via the Agentic Commerce Protocol (ACP), alongside regular shoppers.</li>
-                <li><strong>Stay just as processor-agnostic for agentic payments</strong> &ndash; not locked into whichever PSP the agent prefers.</li>
+                <li><strong>Serve AI shopping agents</strong> via the <u><a href="https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json">ACP</a></u>, alongside regular shoppers.</li>
+                <li><strong>Stay just as PSP-agnostic for agentic payments</strong> &ndash; not locked into agent's preference.</li>
               </ul>
-              <p>The demo shop uses <u><a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a></u>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips during development.
+              <br />
+              <p>This shop used <u><a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a></u>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips during development.
               </p>
             </>
           ),

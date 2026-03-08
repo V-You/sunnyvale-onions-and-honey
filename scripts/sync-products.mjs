@@ -78,7 +78,18 @@ async function readProducts() {
       throw new Error(`Invalid product file: ${fileName}`);
     }
 
-    products.push(parsed);
+    const salePercentOff = Number(parsed.sale_percent_off ?? 0);
+    const onSale =
+      (parsed.on_sale === true || salePercentOff > 0) &&
+      Number.isFinite(salePercentOff) &&
+      salePercentOff > 0;
+
+    products.push({
+      ...parsed,
+      on_sale: onSale,
+      sale_percent_off: onSale ? Math.min(95, Math.round(salePercentOff)) : 0,
+      in_stock: parsed.in_stock !== false,
+    });
   }
 
   return products.sort((left, right) => left.sku.localeCompare(right.sku));

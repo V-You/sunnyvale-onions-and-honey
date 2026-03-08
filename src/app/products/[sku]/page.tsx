@@ -4,6 +4,12 @@ import Footer from "@/components/Footer";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductImage from "@/components/ProductImage";
 import { getProductBySku } from "@/lib/catalog";
+import {
+  formatProductPrice,
+  getProductEffectivePriceCents,
+  getProductSalePercentOff,
+  isProductOnSale,
+} from "@/lib/product-pricing";
 import type { Metadata } from "next";
 
 export const runtime = "edge";
@@ -28,7 +34,12 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = getProductBySku(sku);
   if (!product) notFound();
 
-  const priceFormatted = (product.price_cents / 100).toFixed(2);
+  const effectivePriceFormatted = formatProductPrice(
+    getProductEffectivePriceCents(product),
+  );
+  const basePriceFormatted = formatProductPrice(product.price_cents);
+  const onSale = isProductOnSale(product);
+  const salePercentOff = getProductSalePercentOff(product);
 
   // JSON-LD for search engines and agents
   const jsonLd = {
@@ -40,7 +51,7 @@ export default async function ProductDetailPage({ params }: Props) {
     category: product.category,
     offers: {
       "@type": "Offer",
-      price: priceFormatted,
+        price: effectivePriceFormatted,
       priceCurrency: product.currency,
       availability: product.in_stock
         ? "https://schema.org/InStock"
@@ -76,14 +87,33 @@ export default async function ProductDetailPage({ params }: Props) {
               <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">
                 {product.category}
               </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {onSale && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-amber-dark)]">
+                    On sale - {salePercentOff}% off
+                  </span>
+                )}
+                {!product.in_stock && (
+                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-700">
+                    Out of stock
+                  </span>
+                )}
+              </div>
               <h1 className="text-3xl font-bold mt-1 mb-2">{product.name}</h1>
               <p className="text-[var(--color-amber-dark)] italic mb-4">
                 {product.short_tagline}
               </p>
               <p className="text-gray-600 mb-6">{product.description}</p>
 
-              <div className="text-3xl font-bold text-[var(--color-amber-dark)] mb-6">
-                ${priceFormatted}
+              <div className="mb-6 flex items-baseline gap-3">
+                <span className="text-3xl font-bold text-[var(--color-amber-dark)]">
+                  ${effectivePriceFormatted}
+                </span>
+                {onSale && (
+                  <span className="text-lg text-gray-400 line-through">
+                    ${basePriceFormatted}
+                  </span>
+                )}
               </div>
 
               {/* attributes */}

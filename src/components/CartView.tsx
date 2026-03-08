@@ -4,6 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
+import {
+  formatProductPrice,
+  getProductEffectivePriceCents,
+  isProductOnSale,
+} from "@/lib/product-pricing";
 import { loadTransactionHistory } from "@/lib/transaction-history";
 import type {
   ProcessorQueryLookupMode,
@@ -61,7 +66,7 @@ export default function CartView({ products }: { products: Product[] }) {
 
   const total = resolvedItems.reduce(
     (sum, item) =>
-      sum + (item.product ? item.product.price_cents * item.quantity : 0),
+      sum + (item.product ? getProductEffectivePriceCents(item.product) * item.quantity : 0),
     0,
   );
 
@@ -416,7 +421,9 @@ export default function CartView({ products }: { products: Product[] }) {
                 {item.product?.name ?? item.sku}
               </h3>
               <p className="text-sm text-gray-500">
-                ${item.product ? (item.product.price_cents / 100).toFixed(2) : "?"} each
+                ${item.product ? formatProductPrice(getProductEffectivePriceCents(item.product)) : "?"} each
+                {item.product && isProductOnSale(item.product) ? " · sale" : ""}
+                {item.product && !item.product.in_stock ? " · out of stock" : ""}
               </p>
             </div>
             <div className="flex items-center gap-2">

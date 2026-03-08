@@ -3,6 +3,8 @@
   "name": "Space Dust Honey",
   "category": "honey",
   "price_cents": 2200,
+  "on_sale": true,
+  "sale_percent_off": 18,
   "currency": "USD",
   "description": "Infused with holographic edible glitter. A sparkly, citrus honey that is out of this world.",
   "short_tagline": "Literally out of this world",

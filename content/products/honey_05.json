@@ -3,6 +3,8 @@
   "name": "Ghost Pepper Honey",
   "category": "honey",
   "price_cents": 1200,
+  "on_sale": false,
+  "sale_percent_off": 0,
   "currency": "USD",
   "description": "Sweet meets heat in this amber-red inferno. Not for the faint of heart (or tongue).",
   "short_tagline": "Sweet heat for the brave",
@@ -21,5 +23,5 @@
     "challenge"
   ],
   "image_url": "/images/honey_05.webp",
-  "in_stock": true
+  "in_stock": false
 }

@@ -3,6 +3,8 @@
   "name": "Breath-Taker Shallots",
   "category": "onion",
   "price_cents": 650,
+  "on_sale": false,
+  "sale_percent_off": 0,
   "currency": "USD",
   "description": "Elegant golden-brown shallots with a buttery, mild flavor. Perfect for gourmet dishes and impressing dinner guests.",
   "short_tagline": "Delicate enough for a first date",
@@ -21,5 +23,5 @@
     "delicate"
   ],
   "image_url": "/images/onion_02.webp",
-  "in_stock": true
+  "in_stock": false
 }

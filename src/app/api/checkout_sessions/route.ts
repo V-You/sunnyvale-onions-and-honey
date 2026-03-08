@@ -3,6 +3,7 @@ import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
+import { getProductEffectivePriceCents } from "@/lib/product-pricing";
 import type { CheckoutSession, CartItem } from "@/lib/types";
 
 export const runtime = "edge";
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       sku: product.sku,
       name: product.name,
       quantity: item.quantity,
-      price_cents: product.price_cents,
+      price_cents: getProductEffectivePriceCents(product),
     });
   }
 

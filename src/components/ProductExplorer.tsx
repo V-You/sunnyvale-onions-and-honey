@@ -2,6 +2,7 @@
 
 import { startTransition, useDeferredValue, useState } from "react";
 import ProductCard from "@/components/ProductCard";
+import { getProductEffectivePriceCents } from "@/lib/product-pricing";
 import type { Product } from "@/lib/types";
 
 type CategoryFilter = "all" | "onion" | "honey";
@@ -49,7 +50,10 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
         return false;
       }
 
-      if (priceCeiling !== "all" && product.price_cents > Number(priceCeiling)) {
+      if (
+        priceCeiling !== "all" &&
+        getProductEffectivePriceCents(product) > Number(priceCeiling)
+      ) {
         return false;
       }
 
@@ -78,16 +82,16 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
     .sort((left, right) => {
       switch (sortMode) {
         case "price-asc":
-          return left.price_cents - right.price_cents;
+          return getProductEffectivePriceCents(left) - getProductEffectivePriceCents(right);
         case "price-desc":
-          return right.price_cents - left.price_cents;
+          return getProductEffectivePriceCents(right) - getProductEffectivePriceCents(left);
         case "gift-desc":
-          return right.gift_score - left.gift_score || right.price_cents - left.price_cents;
+          return right.gift_score - left.gift_score || getProductEffectivePriceCents(right) - getProductEffectivePriceCents(left);
         case "intensity-desc":
-          return right.intensity - left.intensity || right.price_cents - left.price_cents;
+          return right.intensity - left.intensity || getProductEffectivePriceCents(right) - getProductEffectivePriceCents(left);
         case "featured":
         default:
-          return right.gift_score - left.gift_score || left.price_cents - right.price_cents;
+          return right.gift_score - left.gift_score || getProductEffectivePriceCents(left) - getProductEffectivePriceCents(right);
       }
     });
 

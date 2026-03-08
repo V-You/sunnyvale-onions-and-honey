@@ -3,6 +3,8 @@
   "name": "Midnight Blossom",
   "category": "honey",
   "price_cents": 3000,
+  "on_sale": true,
+  "sale_percent_off": 27,
   "currency": "USD",
   "description": "A near-black buckwheat honey with an intense, complex taste. For the connoisseur who's seen everything.",
   "short_tagline": "Darkness you can taste",
