@@ -3,7 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Product } from "@/lib/types";
+import Modal from "@/components/Modal";
+import { loadTransactionHistory } from "@/lib/transaction-history";
+import type {
+  ProcessorQueryResponse,
+  Product,
+  RecentTransactionEntry,
+} from "@/lib/types";
 
 interface CartEntry {
   sku: string;
@@ -12,11 +18,19 @@ interface CartEntry {
 
 export default function CartView({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartEntry[]>([]);
+  const [history, setHistory] = useState<RecentTransactionEntry[]>([]);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<RecentTransactionEntry | null>(null);
+  const [queryResult, setQueryResult] =
+    useState<ProcessorQueryResponse | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [querying, setQuerying] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const raw = localStorage.getItem("cart");
     if (raw) setCart(JSON.parse(raw));
+    setHistory(loadTransactionHistory());
   }, []);
 
   const save = useCallback((updated: CartEntry[]) => {
@@ -48,16 +62,250 @@ export default function CartView({ products }: { products: Product[] }) {
     0,
   );
 
+  function formatCurrency(amountCents: number, currency: string) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(amountCents / 100);
+  }
+
+  function formatDate(timestamp: number) {
+    return new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(timestamp);
+  }
+
+  function describeItems(entry: RecentTransactionEntry) {
+    return entry.items
+      .map((item) => `${item.name} x ${item.quantity}`)
+      .join(", ");
+  }
+
+  async function openTransactionQuery(entry: RecentTransactionEntry) {
+    if (!entry.psp_transaction_id) {
+      return;
+    }
+
+    setSelectedTransaction(entry);
+    setQueryResult(null);
+    setQueryError(null);
+    setQuerying(true);
+
+    try {
+      const response = await fetch(
+        `/api/processor_transactions/${entry.processor}/${encodeURIComponent(entry.psp_transaction_id)}`,
+      );
+      const payload = (await response.json()) as ProcessorQueryResponse | { error?: string; message?: string };
+
+      if (!response.ok) {
+        const errorMessage =
+          ("message" in payload && typeof payload.message === "string" && payload.message) ||
+          ("error" in payload && typeof payload.error === "string" && payload.error) ||
+          `Query failed with HTTP ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      setQueryResult(payload as ProcessorQueryResponse);
+    } catch (error) {
+      setQueryError(
+        error instanceof Error ? error.message : "Unable to query the processor",
+      );
+    } finally {
+      setQuerying(false);
+    }
+  }
+
+  function closeTransactionModal() {
+    setSelectedTransaction(null);
+    setQueryResult(null);
+    setQueryError(null);
+    setQuerying(false);
+  }
+
+  function renderHistorySection() {
+    return (
+      <>
+        <section className="bg-white rounded-xl p-6 shadow-sm mt-8">
+          <div className="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h2 className="text-lg font-semibold">Recent transactions</h2>
+              <p className="text-sm text-gray-500">
+                Up to 12 entries are kept for 1 day on this device.
+              </p>
+            </div>
+          </div>
+
+          {history.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No recent transactions have been recorded yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {history.map((entry) => (
+                <article
+                  key={entry.history_id}
+                  className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-3 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
+                        <span className="rounded-full bg-white px-2 py-1 font-semibold text-gray-700">
+                          {entry.processor}
+                        </span>
+                        <span>{formatDate(entry.recorded_at)}</span>
+                        <span className="rounded-full bg-white px-2 py-1 font-semibold text-gray-700">
+                          {entry.status}
+                        </span>
+                      </div>
+
+                      <dl className="grid gap-2 text-sm text-gray-700">
+                        <div>
+                          <dt className="font-medium text-gray-500">Merchant transaction ID</dt>
+                          <dd className="break-all font-mono text-xs">
+                            {entry.merchant_transaction_id ?? "Not recorded"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-gray-500">Processor transaction ID</dt>
+                          <dd className="break-all font-mono text-xs">
+                            {entry.psp_transaction_id ?? "Not recorded"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-gray-500">Cart</dt>
+                          <dd>{describeItems(entry)}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-gray-500">Price</dt>
+                          <dd>{formatCurrency(entry.amount_total_cents, entry.currency)}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-gray-500">Result code</dt>
+                          <dd className="font-mono text-xs">
+                            {entry.result_code ?? "Not provided"}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <div className="flex flex-col gap-2 md:w-44">
+                      <button
+                        type="button"
+                        onClick={() => openTransactionQuery(entry)}
+                        disabled={!entry.psp_transaction_id || querying}
+                        className="rounded-lg bg-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-green-mid)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Query processor
+                      </button>
+                      {entry.result_description && (
+                        <p className="text-xs text-gray-500">
+                          {entry.result_description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <Modal
+          open={selectedTransaction !== null}
+          title="Transaction query"
+          onClose={closeTransactionModal}
+        >
+          {selectedTransaction && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-black/10 bg-white/70 p-4">
+                <dl className="grid gap-2 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Processor</dt>
+                    <dd className="font-medium uppercase">{selectedTransaction.processor}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Processor transaction ID</dt>
+                    <dd className="font-mono text-xs break-all text-right">
+                      {selectedTransaction.psp_transaction_id ?? "Not recorded"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Merchant transaction ID</dt>
+                    <dd className="font-mono text-xs break-all text-right">
+                      {selectedTransaction.merchant_transaction_id ?? "Not recorded"}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              {querying && (
+                <p className="text-sm text-gray-600">Querying the processor...</p>
+              )}
+
+              {queryError && (
+                <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
+                  {queryError}
+                </div>
+              )}
+
+              {queryResult && (
+                <>
+                  <div className="rounded-xl border border-black/10 bg-white/70 p-4">
+                    <dl className="grid gap-2 text-sm">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Query status</dt>
+                        <dd className="font-medium">
+                          {queryResult.success ? "success" : "failed"}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Result code</dt>
+                        <dd className="font-mono text-xs text-right">
+                          {queryResult.result_code ?? "Not provided"}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Result description</dt>
+                        <dd className="text-right">
+                          {queryResult.result_description ?? queryResult.message ?? "Not provided"}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Queried at</dt>
+                        <dd className="text-right">{formatDate(queryResult.queried_at)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-950 p-4 text-xs text-slate-100 overflow-x-auto">
+                    <p className="mb-2 font-semibold">Raw processor response</p>
+                    <pre className="whitespace-pre-wrap break-all font-mono">
+                      {JSON.stringify(queryResult.response_body, null, 2)}
+                    </pre>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </Modal>
+      </>
+    );
+  }
+
   if (cart.length === 0) {
     return (
-      <div className="text-center py-16">
-        <p className="text-xl text-gray-500 mb-4">Your cart is empty</p>
-        <Link
-          href="/products"
-          className="text-[var(--color-amber-dark)] font-semibold hover:underline"
-        >
-          Start shopping
-        </Link>
+      <div className="space-y-8">
+        <div className="text-center py-16">
+          <p className="text-xl text-gray-500 mb-4">Your cart is empty</p>
+          <Link
+            href="/products"
+            className="text-[var(--color-amber-dark)] font-semibold hover:underline"
+          >
+            Start shopping
+          </Link>
+        </div>
+        {renderHistorySection()}
       </div>
     );
   }
@@ -119,6 +367,8 @@ export default function CartView({ products }: { products: Product[] }) {
           Proceed to checkout
         </button>
       </div>
+
+      {renderHistorySection()}
     </div>
   );
 }

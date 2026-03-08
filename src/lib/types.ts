@@ -26,6 +26,8 @@ export interface CartItem {
   price_cents: number;
 }
 
+export type PSPName = "aci" | "stripe";
+
 // checkout session (KV-stored)
 export interface CheckoutSession {
   id: string;
@@ -38,7 +40,7 @@ export interface CheckoutSession {
   order_id?: string;
   merchant_transaction_id?: string;
   psp_transaction_id?: string;
-  processor?: "aci" | "stripe";
+  processor?: PSPName;
   result_code?: string;
   result_description?: string;
   completed_at?: number;
@@ -58,12 +60,41 @@ export interface PSPResult {
   success: boolean;
   order_id: string;
   psp_transaction_id: string;
-  processor: "aci" | "stripe";
+  processor: PSPName;
   merchant_transaction_id?: string;
   result_code?: string;
   result_description?: string;
   response_body?: unknown;
   error?: string;
+}
+
+export interface RecentTransactionEntry {
+  history_id: string;
+  status: "completed" | "failed";
+  order_id?: string;
+  merchant_transaction_id?: string;
+  psp_transaction_id?: string;
+  processor: PSPName;
+  result_code?: string;
+  result_description?: string;
+  amount_total_cents: number;
+  currency: string;
+  items: CartItem[];
+  recorded_at: number;
+}
+
+export interface ProcessorQueryResponse {
+  success: boolean;
+  processor: PSPName;
+  transaction_id: string;
+  merchant_transaction_id?: string;
+  psp_transaction_id: string;
+  queried_at: number;
+  status?: string;
+  result_code?: string;
+  result_description?: string;
+  response_body: unknown;
+  message?: string;
 }
 
 // worker environment bindings

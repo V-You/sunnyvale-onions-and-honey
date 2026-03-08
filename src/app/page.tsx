@@ -13,7 +13,7 @@ export default function Home() {
       <Header />
 
       {/* hero */}
-      <section className="bg-[var(--color-green-dark)] text-[var(--color-cream)] py-20 px-6">
+      <section id="hero" className="bg-[var(--color-green-dark)] text-[var(--color-cream)] py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
             Get root access to your produce

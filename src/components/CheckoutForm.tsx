@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Card, EvervaultProvider, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
-import type { Product } from "@/lib/types";
+import { addTransactionHistoryEntry, createTransactionHistoryId } from "@/lib/transaction-history";
+import type { CartItem, Product, PSPName, RecentTransactionEntry } from "@/lib/types";
 
 interface CartEntry {
   sku: string;
@@ -23,6 +24,7 @@ interface SessionErrorResponse {
 
 interface SessionCreateResponse {
   id: string;
+  currency?: string;
 }
 
 interface CheckoutCompleteResponse {
@@ -91,6 +93,22 @@ function getResponseMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
+function resolveCartItems(
+  cart: CartEntry[],
+  products: Product[],
+): CartItem[] {
+  return cart.map((entry) => {
+    const product = products.find((candidate) => candidate.sku === entry.sku);
+
+    return {
+      sku: entry.sku,
+      name: product?.name ?? entry.sku,
+      quantity: entry.quantity,
+      price_cents: product?.price_cents ?? 0,
+    };
+  });
+}
+
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
 const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
 const EVERVAULT_CONFIGURED =
@@ -116,6 +134,40 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
     const product = products.find((p) => p.sku === entry.sku);
     return sum + (product ? product.price_cents * entry.quantity : 0);
   }, 0);
+
+  function persistTransactionHistory(
+    payload: unknown,
+    currency: string,
+  ) {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+
+    const result = payload as CheckoutCompleteResponse;
+    if (result.processor !== "aci" && result.processor !== "stripe") {
+      return;
+    }
+
+    const entryBase: Omit<RecentTransactionEntry, "history_id"> = {
+      status: result.status === "completed" ? "completed" : "failed",
+      order_id: result.order_id,
+      merchant_transaction_id: result.merchant_transaction_id,
+      psp_transaction_id: result.psp_transaction_id,
+      processor: result.processor as PSPName,
+      result_code: result.result_code,
+      result_description:
+        result.result_description ?? result.message ?? result.error,
+      amount_total_cents: total,
+      currency,
+      items: resolveCartItems(cart, products),
+      recorded_at: Date.now(),
+    };
+
+    addTransactionHistoryEntry({
+      ...entryBase,
+      history_id: createTransactionHistoryId(entryBase),
+    });
+  }
 
   function handleCardUpdate(payload: CardPayload) {
     const isReady = payload.isComplete && payload.isValid;
@@ -166,6 +218,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       }
 
       const session = sessionPayload as SessionCreateResponse;
+      const sessionCurrency = session.currency ?? products[0]?.currency ?? "USD";
 
       if (!session.id) {
         throw new Error("Checkout session was created without an id");
@@ -206,6 +259,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
 
       const resultPayload = await readApiResponse(completeResp);
       setTechnicalResponse(resultPayload);
+      persistTransactionHistory(resultPayload, sessionCurrency);
 
       if (!completeResp.ok) {
         throw new Error(
