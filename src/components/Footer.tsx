@@ -58,13 +58,13 @@ const footerEntries: FooterModalEntry[] = [
             <>
               <p>This demo shows that a merchant can:</p>
               <ul>
-                <li><strong>Own 100% of their tokenized card data</strong>  &nbsp;  Not locked into any payment provider's vault</li>
-                <li><strong>Stay PCI-compliant (SAQ A)</strong>  &nbsp;  Without ever handling plaintext PANs</li>
-                <li><strong>Hot-swap payment processors with a config change</strong>  &nbsp;  Switch PSPs via env var and redeploy</li>
-                <li><strong>Serve AI shopping agents</strong>  &nbsp;  Via the Agentic Commerce Protocol (ACP), alongside human shoppers</li>
-                <li><strong>Stay processor-agnostic for agentic payments</strong>  &nbsp;  Not locked into whichever PSP the agent prefers</li>
+                <li><strong>Own 100% of their tokenized card data</strong> without vendor lock-in (PSP vaults).</li>
+                <li><strong>Stay PCI-compliant (SAQ A)</strong> without ever handling card data.</li>
+                <li><strong>Hot-swap payment processors</strong>  in seconds via env var and redeploy.</li>
+                <li><strong>Serve AI shopping agents</strong> via the Agentic Commerce Protocol (ACP), alongside regular shoppers.</li>
+                <li><strong>Stay just as processor-agnostic for agentic payments</strong> &ndash; not locked into whichever PSP the agent prefers.</li>
               </ul>
-              <p>The demo shop uses <a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips.
+              <p>The demo shop uses <u><a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a></u>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips during development.
               </p>
             </>
           ),
