@@ -1,5 +1,7 @@
 import type {
   AcpAgentCapabilities,
+  AcpCheckoutBuyer,
+  AcpCheckoutSessionCompleteResponse,
   AcpCheckoutItemInput,
   AcpCheckoutSessionLineItem,
   AcpCheckoutSessionResponse,
@@ -16,8 +18,8 @@ import type {
   PSPName,
 } from "./types";
 
-const ACP_MERCHANT_ID = "sunnyvale-onions-and-honey";
-const ACP_TOKENIZED_CARD_HANDLER_ID = "card_primary";
+export const ACP_MERCHANT_ID = "sunnyvale-onions-and-honey";
+export const ACP_TOKENIZED_CARD_HANDLER_ID = "card_primary";
 const SELLER_SUPPORTED_INTERVENTIONS: AcpInterventionType[] = [];
 const SUPPORTED_CARD_BRANDS = ["visa", "mastercard", "amex", "discover"];
 const SUPPORTED_CARD_FUNDING_TYPES: Array<"credit" | "debit"> = [
@@ -117,7 +119,7 @@ function createTokenizedCardHandler(
     name: "dev.acp.tokenized.card",
     version: "2026-01-22",
     spec: "https://acp.dev/handlers/tokenized.card",
-    requires_delegate_payment: false,
+    requires_delegate_payment: true,
     requires_pci_compliance: false,
     psp: processor,
     config_schema: "https://acp.dev/schemas/handlers/tokenized.card/config.json",
@@ -145,7 +147,7 @@ function createSellerBackedSavedCardHandlers(
     name: "dev.acp.seller_backed.saved_card",
     version: "2026-02-05",
     spec: "https://acp.dev/handlers/seller_backed/saved_card",
-    requires_delegate_payment: false,
+    requires_delegate_payment: true,
     requires_pci_compliance: false,
     psp: "seller_managed",
     config_schema:
@@ -164,6 +166,55 @@ function createSellerBackedSavedCardHandlers(
     display_order: index + 1,
     display_name: paymentMethod.display_name,
   }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+export function getCheckoutPaymentHandler(
+  session: CheckoutSession,
+  handlerId: string,
+): AcpPaymentHandler | null {
+  const handlers = session.capabilities?.payment?.handlers;
+
+  if (!handlers) {
+    return null;
+  }
+
+  return handlers.find((handler) => handler.id === handlerId) ?? null;
+}
+
+export function isTokenizedCardHandler(handler: AcpPaymentHandler): boolean {
+  return handler.name === "dev.acp.tokenized.card";
+}
+
+export function isSellerBackedSavedCardHandler(
+  handler: AcpPaymentHandler,
+): boolean {
+  return handler.name === "dev.acp.seller_backed.saved_card";
+}
+
+export function getHandlerMerchantId(handler: AcpPaymentHandler): string | null {
+  const merchantId = isRecord(handler.config)
+    ? handler.config.merchant_id
+    : undefined;
+
+  return typeof merchantId === "string" && merchantId.length > 0
+    ? merchantId
+    : null;
+}
+
+export function getHandlerPaymentMethodId(
+  handler: AcpPaymentHandler,
+): string | null {
+  const paymentMethodId = isRecord(handler.config)
+    ? handler.config.payment_method_id
+    : undefined;
+
+  return typeof paymentMethodId === "string" && paymentMethodId.length > 0
+    ? paymentMethodId
+    : null;
 }
 
 export function createCheckoutCapabilities(
@@ -269,5 +320,27 @@ export function createCheckoutSessionResponse(
     totals: createTotals(session.amount_total_cents),
     messages: [],
     links: [],
+  };
+}
+
+export function createCheckoutCompletionResponse(
+  session: CheckoutSession,
+  activeProcessor: string | undefined,
+  origin: string,
+  buyer?: AcpCheckoutBuyer,
+): AcpCheckoutSessionCompleteResponse {
+  const orderId = session.order_id ?? session.id;
+
+  return {
+    ...createCheckoutSessionResponse(session, activeProcessor),
+    ...(buyer ? { buyer } : {}),
+    order: {
+      id: orderId,
+      checkout_session_id: session.id,
+      permalink_url: new URL(
+        `/confirmation?order_id=${encodeURIComponent(orderId)}`,
+        origin,
+      ).toString(),
+    },
   };
 }

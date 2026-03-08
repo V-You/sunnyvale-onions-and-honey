@@ -115,10 +115,108 @@ export interface AcpCheckoutBuyer {
   phone_number?: string;
 }
 
+export interface AcpAddress {
+  name?: string;
+  line_one?: string;
+  line_two?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+}
+
 export interface AcpCheckoutSessionCreateRequest {
   items?: AcpCheckoutItemInput[];
   buyer?: AcpCheckoutBuyer;
   capabilities?: AcpAgentCapabilities;
+}
+
+export interface AcpDelegatePaymentAllowance {
+  reason: "one_time";
+  max_amount: number;
+  currency: string;
+  checkout_session_id: string;
+  merchant_id: string;
+  expires_at: string;
+}
+
+export interface AcpDelegatePaymentRiskSignal {
+  type: string;
+  score?: number;
+  action?: string;
+}
+
+export interface AcpDelegatePaymentCardMethod {
+  type: "card";
+  number?: string;
+  card_number?: string;
+  exp_month?: string;
+  expiry_month?: string;
+  exp_year?: string;
+  expiry_year?: string;
+  name?: string;
+  card_holder?: string;
+  cvc?: string;
+  cvv?: string;
+  display_brand?: string;
+  display_last4?: string;
+  display_card_funding_type?: string;
+  metadata?: Record<string, string>;
+}
+
+export interface AcpDelegatePaymentSellerBackedSavedCardMethod {
+  type: "seller_backed_saved_card";
+  payment_method_id?: string;
+}
+
+export type AcpDelegatePaymentMethod =
+  | AcpDelegatePaymentCardMethod
+  | AcpDelegatePaymentSellerBackedSavedCardMethod;
+
+export interface AcpDelegatePaymentRequest {
+  handler_id: string;
+  payment_method: AcpDelegatePaymentMethod;
+  allowance: AcpDelegatePaymentAllowance;
+  billing_address?: AcpAddress;
+  risk_signals: AcpDelegatePaymentRiskSignal[];
+  metadata: Record<string, string>;
+}
+
+export interface AcpDelegatePaymentResponse {
+  id: string;
+  created: string;
+  metadata: Record<string, string>;
+}
+
+export interface AcpTokenCredential {
+  type: "spt";
+  token: string;
+  allowance?: {
+    max_amount?: number;
+    currency?: string;
+    expires_at?: string;
+  };
+}
+
+export interface AcpPaymentInstrument {
+  id?: string;
+  handler_id?: string;
+  type: string;
+  credential: AcpTokenCredential | Record<string, unknown>;
+  metadata?: Record<string, string>;
+}
+
+export interface AcpPaymentData {
+  handler_id: string;
+  instrument: AcpPaymentInstrument;
+  billing_address?: AcpAddress;
+}
+
+export interface AcpCheckoutSessionCompleteRequest {
+  buyer?: AcpCheckoutBuyer;
+  payment_data?: AcpPaymentData;
+  authentication_result?: unknown;
+  payment_method?: PaymentMethod;
 }
 
 export interface AcpCheckoutSessionLineItem {
@@ -169,6 +267,18 @@ export interface AcpCheckoutSessionResponse {
   totals: AcpCheckoutTotal[];
   messages: AcpCheckoutMessage[];
   links: AcpCheckoutLink[];
+}
+
+export interface AcpCheckoutOrder {
+  id: string;
+  checkout_session_id: string;
+  permalink_url: string;
+}
+
+export interface AcpCheckoutSessionCompleteResponse
+  extends AcpCheckoutSessionResponse {
+  buyer?: AcpCheckoutBuyer;
+  order: AcpCheckoutOrder;
 }
 
 export interface MerchantSavedPaymentDisplayMetadata {

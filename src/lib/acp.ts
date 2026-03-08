@@ -82,7 +82,7 @@ export function createAcpDiscoveryResponse(request: NextRequest) {
     api_base_url: new URL("/api", request.url).toString(),
     transports: ["rest"],
     capabilities: {
-      services: ["checkout"],
+      services: ["checkout", "delegate_payment"],
       supported_currencies: ["usd"],
       supported_locales: ["en-US"],
     },

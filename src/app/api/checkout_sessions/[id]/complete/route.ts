@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
+import {
+  createCheckoutCompletionResponse,
+  getCheckoutPaymentHandler,
+  getHandlerPaymentMethodId,
+  isSellerBackedSavedCardHandler,
+  isTokenizedCardHandler,
+} from "@/lib/acp-checkout";
+import {
+  isDelegatedPaymentTokenExpired,
+  markDelegatedPaymentTokenUsed,
+  readDelegatedPaymentToken,
+} from "@/lib/acp-delegate-payment";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { resolveMerchantSavedPaymentMethod } from "@/lib/merchant-saved-payment-methods";
 import type {
+  AcpCheckoutSessionCompleteRequest,
+  AcpTokenCredential,
   CardPaymentMethod,
   CheckoutSession,
   PaymentMethod,
@@ -19,6 +33,10 @@ import { getSessionsKV, getEnv } from "@/lib/kv";
 export const runtime = "edge";
 
 const CHECKOUT_COMPLETE_METHODS = ["POST", "OPTIONS"] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
 
 function isEncryptedCardPaymentMethod(
   paymentMethod: PaymentMethod,
@@ -53,6 +71,37 @@ function hasValidDelegatedStripeToken(
   return Boolean(
     paymentMethod.payment_method_id || paymentMethod.confirmation_token,
   );
+}
+
+function readSptCredential(
+  credential: unknown,
+): AcpTokenCredential | null {
+  if (!isRecord(credential)) {
+    return null;
+  }
+
+  return credential.type === "spt" && typeof credential.token === "string"
+    ? {
+        type: "spt",
+        token: credential.token,
+        allowance: isRecord(credential.allowance)
+          ? {
+              max_amount:
+                typeof credential.allowance.max_amount === "number"
+                  ? credential.allowance.max_amount
+                  : undefined,
+              currency:
+                typeof credential.allowance.currency === "string"
+                  ? credential.allowance.currency
+                  : undefined,
+              expires_at:
+                typeof credential.allowance.expires_at === "string"
+                  ? credential.allowance.expires_at
+                  : undefined,
+            }
+          : undefined,
+      }
+    : null;
 }
 
 export async function OPTIONS(request: NextRequest) {
@@ -137,36 +186,186 @@ export async function POST(
     );
   }
 
-  const body = (await request.json()) as { payment_method?: PaymentMethod };
+  const body = (await request.json()) as AcpCheckoutSessionCompleteRequest;
   const pm = body.payment_method;
+  const paymentData = body.payment_data;
 
-  if (!pm) {
-    return acpJson(
-      { error: "payment_method is required" },
-      { status: 400 },
-    );
-  }
+  let processorPaymentMethod: PaymentMethod | null = null;
+  let paymentFlow: PaymentFlowName = "card";
 
-  let processorPaymentMethod: PaymentMethod = pm;
-  let paymentFlow: PaymentFlowName = pm.type;
-
-  if (isMerchantSavedPaymentMethod(pm)) {
-    const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
-      pm.payment_method_id,
-    );
-
-    if (!resolvedPaymentMethod) {
+  if (paymentData) {
+    const handler = getCheckoutPaymentHandler(session, paymentData.handler_id);
+    if (!handler) {
       return acpJson(
-        {
-          error:
-            "Unknown merchant_saved_payment id. Request a fresh checkout session and use one of the advertised merchant_saved_payment_methods.",
-        },
+        { error: "payment_data.handler_id is not valid for this checkout session" },
         { status: 400 },
       );
     }
 
-    processorPaymentMethod = resolvedPaymentMethod;
-    paymentFlow = "merchant_saved_payment";
+    if (
+      paymentData.instrument.handler_id &&
+      paymentData.instrument.handler_id !== paymentData.handler_id
+    ) {
+      return acpJson(
+        { error: "payment_data.instrument.handler_id must match payment_data.handler_id" },
+        { status: 400 },
+      );
+    }
+
+    const credential = readSptCredential(paymentData.instrument.credential);
+    if (!credential) {
+      return acpJson(
+        { error: "payment_data.instrument.credential must include type=spt and token" },
+        { status: 400 },
+      );
+    }
+
+    const delegatedToken = await readDelegatedPaymentToken(credential.token);
+    if (!delegatedToken) {
+      return acpJson(
+        { error: "Delegated payment token not found" },
+        { status: 400 },
+      );
+    }
+
+    if (delegatedToken.used_at) {
+      return acpJson(
+        { error: "Delegated payment token has already been used" },
+        { status: 409 },
+      );
+    }
+
+    if (isDelegatedPaymentTokenExpired(delegatedToken)) {
+      return acpJson(
+        { error: "Delegated payment token has expired" },
+        { status: 400 },
+      );
+    }
+
+    if (delegatedToken.checkout_session_id !== session.id) {
+      return acpJson(
+        { error: "Delegated payment token does not belong to this checkout session" },
+        { status: 400 },
+      );
+    }
+
+    if (delegatedToken.handler_id !== paymentData.handler_id) {
+      return acpJson(
+        { error: "Delegated payment token does not match payment_data.handler_id" },
+        { status: 400 },
+      );
+    }
+
+    if (delegatedToken.allowance.max_amount < session.amount_total_cents) {
+      return acpJson(
+        { error: "Delegated payment token allowance is lower than the checkout total" },
+        { status: 400 },
+      );
+    }
+
+    if (
+      delegatedToken.allowance.currency.toLowerCase() !==
+      session.currency.toLowerCase()
+    ) {
+      return acpJson(
+        { error: "Delegated payment token currency does not match the checkout session" },
+        { status: 400 },
+      );
+    }
+
+    if (isTokenizedCardHandler(handler)) {
+      if (paymentData.instrument.type !== "card") {
+        return acpJson(
+          { error: "Tokenized card handler requires instrument.type=card" },
+          { status: 400 },
+        );
+      }
+
+      if (delegatedToken.payment_method.type !== "card") {
+        return acpJson(
+          { error: "Delegated payment token does not contain card data" },
+          { status: 400 },
+        );
+      }
+
+      processorPaymentMethod = delegatedToken.payment_method;
+      paymentFlow = "card";
+    } else if (isSellerBackedSavedCardHandler(handler)) {
+      if (paymentData.instrument.type !== "seller_backed_saved_card") {
+        return acpJson(
+          { error: "Seller-backed saved card handler requires instrument.type=seller_backed_saved_card" },
+          { status: 400 },
+        );
+      }
+
+      const paymentMethodId =
+        delegatedToken.payment_method.type === "seller_backed_saved_card"
+          ? delegatedToken.payment_method.payment_method_id
+          : getHandlerPaymentMethodId(handler);
+
+      if (!paymentMethodId) {
+        return acpJson(
+          { error: "Unable to resolve merchant saved payment method for handler" },
+          { status: 400 },
+        );
+      }
+
+      const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
+        paymentMethodId,
+      );
+      if (!resolvedPaymentMethod) {
+        return acpJson(
+          { error: "Unable to resolve seller-backed saved card to processor payment data" },
+          { status: 400 },
+        );
+      }
+
+      processorPaymentMethod = resolvedPaymentMethod;
+      paymentFlow = "merchant_saved_payment";
+    } else {
+      return acpJson(
+        { error: "Unsupported payment handler for checkout completion" },
+        { status: 400 },
+      );
+    }
+
+    await markDelegatedPaymentTokenUsed(delegatedToken);
+  } else {
+    if (!pm) {
+      return acpJson(
+        { error: "payment_data or payment_method is required" },
+        { status: 400 },
+      );
+    }
+
+    processorPaymentMethod = pm;
+    paymentFlow = pm.type;
+
+    if (isMerchantSavedPaymentMethod(pm)) {
+      const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
+        pm.payment_method_id,
+      );
+
+      if (!resolvedPaymentMethod) {
+        return acpJson(
+          {
+            error:
+              "Unknown merchant_saved_payment id. Request a fresh checkout session and use one of the advertised merchant_saved_payment_methods.",
+          },
+          { status: 400 },
+        );
+      }
+
+      processorPaymentMethod = resolvedPaymentMethod;
+      paymentFlow = "merchant_saved_payment";
+    }
+  }
+
+  if (!processorPaymentMethod) {
+    return acpJson(
+      { error: "Unable to resolve payment method for checkout completion" },
+      { status: 400 },
+    );
   }
 
   if (
@@ -229,12 +428,41 @@ export async function POST(
 
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 
+    if (!result.success) {
+      return acpJson(
+        {
+          status: session.status,
+          amount_total_cents: session.amount_total_cents,
+          currency: session.currency.toLowerCase(),
+          completed_at: session.completed_at,
+          processor: result.processor,
+          payment_flow: result.payment_flow,
+          payment_metrics: result.payment_metrics,
+          merchant_transaction_id: session.merchant_transaction_id,
+          psp_transaction_id: result.psp_transaction_id,
+          result_code: result.result_code,
+          result_description: result.result_description,
+          response_body: result.response_body,
+          message: result.error ?? result.result_description,
+        },
+        undefined,
+      );
+    }
+
+    const acpCompletionResponse = createCheckoutCompletionResponse(
+      session,
+      env.ACTIVE_PSP,
+      request.nextUrl.origin,
+      body.buyer,
+    );
+
     return acpJson(
       {
+        ...acpCompletionResponse,
         status: session.status,
-        order_id: result.order_id,
+        order_id: acpCompletionResponse.order.id,
         amount_total_cents: session.amount_total_cents,
-        currency: session.currency,
+        currency: acpCompletionResponse.currency,
         completed_at: session.completed_at,
         processor: result.processor,
         payment_flow: result.payment_flow,
