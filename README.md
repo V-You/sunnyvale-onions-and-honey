@@ -82,12 +82,14 @@ Use the provided env template and set real values for:
 - EV_APP_ID
 - ACTIVE_PSP
 - ACI_RELAY_DOMAIN
-- STRIPE_RELAY_DOMAIN
 - ACI_ENTITY_ID
 - ACI_TOKEN
+- STRIPE_RELAY_DOMAIN
 - STRIPE_SECRET_KEY
 - NEXT_PUBLIC_TINA_CLIENT_ID
 - ALLOWED_ORIGINS
+- ACP_API_KEYS
+- NEXT_PUBLIC_ACP_API_KEY
 
 Cloudflare notes:
 - Set build variables, secrets, and KV bindings in the Cloudflare Pages project settings
