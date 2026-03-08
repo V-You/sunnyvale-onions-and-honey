@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, EvervaultProvider, type CardPayload } from "@evervault/react";
+import { Card, EvervaultProvider, themes, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
 import {
   addSavedPaymentMethod,
@@ -151,6 +151,7 @@ const ACP_API_KEY = process.env.NEXT_PUBLIC_ACP_API_KEY ?? "";
 const EVERVAULT_CONFIGURED =
   EVERVAULT_APP_ID.length > 0 && EVERVAULT_TEAM_ID.length > 0;
 const ACP_CONFIGURED = ACP_API_KEY.length > 0;
+const EVERVAULT_CARD_THEME = themes.clean();
 
 export default function CheckoutForm(
   {
@@ -559,13 +560,14 @@ export default function CheckoutForm(
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
           />
         </label>
-        <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+        <div className="rounded-xl">
           <EvervaultProvider
             appId={EVERVAULT_APP_ID}
             teamId={EVERVAULT_TEAM_ID}
             onLoadError={() => setEvervaultLoadError(true)}
           >
             <Card
+              theme={EVERVAULT_CARD_THEME}
               onChange={handleCardUpdate}
               onComplete={handleCardUpdate}
               onError={() => setEvervaultLoadError(true)}

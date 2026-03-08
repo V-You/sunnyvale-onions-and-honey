@@ -119,11 +119,11 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-brown-light)]">
-              Root access to your produce
+              SUNNYVALE ONIONS &amp; HONEY SHOP
             </p>
-            <h1 className="text-4xl font-bold tracking-tight">Shop the silly 24</h1>
+            <h1 className="text-4xl font-bold tracking-tight">HA produce shop</h1>
             <p className="text-[var(--color-brown)]">
-              Filter for giftable honey, feral onions, or whatever your bot-to-table workflow demands.
+              Low latency shipping. All products are shipped in a single, lightweight, and portable "container".
             </p>
           </div>
 
