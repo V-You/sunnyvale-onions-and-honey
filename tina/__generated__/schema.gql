@@ -94,6 +94,7 @@ type Product implements Node & Document {
   price_cents: Float!
   on_sale: Boolean
   sale_percent_off: Float
+  featured_on_homepage: Boolean
   currency: String
   description: String
   short_tagline: String
@@ -147,6 +148,7 @@ input ProductFilter {
   price_cents: NumberFilter
   on_sale: BooleanFilter
   sale_percent_off: NumberFilter
+  featured_on_homepage: BooleanFilter
   currency: StringFilter
   description: StringFilter
   short_tagline: StringFilter
@@ -198,6 +200,7 @@ input ProductMutation {
   price_cents: Float
   on_sale: Boolean
   sale_percent_off: Float
+  featured_on_homepage: Boolean
   currency: String
   description: String
   short_tagline: String

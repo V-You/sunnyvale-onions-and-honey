@@ -88,6 +88,7 @@ async function readProducts() {
       ...parsed,
       on_sale: onSale,
       sale_percent_off: onSale ? Math.min(95, Math.round(salePercentOff)) : 0,
+      featured_on_homepage: parsed.featured_on_homepage === true,
       in_stock: parsed.in_stock !== false,
     });
   }

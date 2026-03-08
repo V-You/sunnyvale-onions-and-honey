@@ -3,6 +3,7 @@
   "name": "Cyber-Sizzlers",
   "category": "onion",
   "price_cents": 600,
+  "featured_on_homepage": false,
   "on_sale": true,
   "sale_percent_off": 23,
   "currency": "USD",

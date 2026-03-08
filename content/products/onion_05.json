@@ -3,6 +3,7 @@
   "name": "Pickled Punks",
   "category": "onion",
   "price_cents": 799,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "Pink pickled onions with a tangy, vinegar-forward bite. Jar of rebellion for your cheese board.",
   "short_tagline": "Punk rock in a jar",

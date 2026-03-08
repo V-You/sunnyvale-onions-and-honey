@@ -3,6 +3,7 @@
   "name": "Bees Knees",
   "category": "honey",
   "price_cents": 1800,
+  "featured_on_homepage": true,
   "currency": "USD",
   "description": "A warm amber classic with a buttery finish. Truly the bee's knees -- as versatile as honey gets.",
   "short_tagline": "The actual bee's knees",

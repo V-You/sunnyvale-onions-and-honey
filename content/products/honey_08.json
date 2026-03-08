@@ -3,6 +3,7 @@
   "name": "Sticky Situations",
   "category": "honey",
   "price_cents": 1100,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "Thick as molasses with a rich amber pour. Built for baking, glazing, and getting into sticky situations.",
   "short_tagline": "Embrace the mess",

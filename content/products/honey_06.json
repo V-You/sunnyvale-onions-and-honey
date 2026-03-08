@@ -3,6 +3,7 @@
   "name": "Meadow's Whisper",
   "category": "honey",
   "price_cents": 1000,
+  "featured_on_homepage": true,
   "currency": "USD",
   "description": "A gentle pale gold wildflower honey. Light, everyday, perfect on toast -- the honey that whispers.",
   "short_tagline": "Quiet luxury for your morning",

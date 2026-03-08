@@ -3,6 +3,7 @@
   "name": "Pollen Punch",
   "category": "honey",
   "price_cents": 1350,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "A cloudy gold raw honey, unfiltered and earthy. For health enthusiasts who like their honey real.",
   "short_tagline": "Raw, real, unfiltered",

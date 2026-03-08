@@ -3,6 +3,7 @@
   "name": "Leeks of Legend",
   "category": "onion",
   "price_cents": 1200,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "Premium light green leeks with a grassy, subtle flavor. The stuff of soup legends.",
   "short_tagline": "Large Leek Models, trained on massive sunsets",

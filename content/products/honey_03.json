@@ -3,6 +3,7 @@
   "name": "Space Dust Honey",
   "category": "honey",
   "price_cents": 2200,
+  "featured_on_homepage": true,
   "on_sale": true,
   "sale_percent_off": 18,
   "currency": "USD",

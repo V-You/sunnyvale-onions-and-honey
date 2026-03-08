@@ -3,6 +3,7 @@
   "name": "Peel-Me-Maybe",
   "category": "onion",
   "price_cents": 400,
+  "featured_on_homepage": false,
   "on_sale": false,
   "sale_percent_off": 0,
   "currency": "USD",

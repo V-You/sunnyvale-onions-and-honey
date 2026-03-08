@@ -3,6 +3,7 @@
   "name": "Sunnyvale Gold",
   "category": "onion",
   "price_cents": 800,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "Our signature golden yellow onion. Sweet and caramelized straight from the earth -- the one that started it all.",
   "short_tagline": "The original Sunnyvale signature",

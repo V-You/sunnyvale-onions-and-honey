@@ -3,6 +3,7 @@
   "name": "Midnight Blossom",
   "category": "honey",
   "price_cents": 3000,
+  "featured_on_homepage": true,
   "on_sale": true,
   "sale_percent_off": 27,
   "currency": "USD",

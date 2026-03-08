@@ -6,7 +6,7 @@ import { getAllProducts } from "@/lib/catalog";
 
 export default function Home() {
   const products = getAllProducts();
-  const featured = products.filter((p) => p.gift_score >= 4).slice(0, 6);
+  const featured = products.filter((product) => product.featured_on_homepage);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -16,7 +16,7 @@ export default function Home() {
       <section id="hero" className="bg-[var(--color-green-dark)] text-[var(--color-cream)] py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
-            Get root access to your produce
+            Get root access to produce
           </h1>
           <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">
             Boutique onions and specialty honey from Sunnyvale. Bot-to-table fresh.
@@ -42,7 +42,7 @@ export default function Home() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-10">
-            Top sellers
+            Most forked flavors:{/* Cream Of The Crop: */}
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featured.map((product) => (
@@ -54,7 +54,7 @@ export default function Home() {
               href="/products"
               className="text-[var(--color-amber-dark)] font-semibold hover:underline"
             >
-              View all 24 products &rarr;
+              View all 🡲 {/* 🠞  🡲 &rarr; -->*/}
             </Link>
           </div>
         </div>

@@ -53,6 +53,12 @@ export default defineConfig({
             ui: { defaultValue: 0 },
           },
           {
+            name: "featured_on_homepage",
+            label: "Featured on homepage",
+            type: "boolean",
+            ui: { defaultValue: false },
+          },
+          {
             name: "currency",
             label: "Currency",
             type: "string",

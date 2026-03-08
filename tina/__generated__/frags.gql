@@ -6,6 +6,7 @@ fragment ProductParts on Product {
   price_cents
   on_sale
   sale_percent_off
+  featured_on_homepage
   currency
   description
   short_tagline

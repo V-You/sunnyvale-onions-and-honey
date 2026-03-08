@@ -3,6 +3,7 @@
   "name": "Old Man's Grumble",
   "category": "onion",
   "price_cents": 250,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "A brown onion that's strong, tear-inducing, and doesn't care what you think. The classic.",
   "short_tagline": "No nonsense, just onion",

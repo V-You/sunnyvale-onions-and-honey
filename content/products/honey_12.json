@@ -3,6 +3,7 @@
   "name": "Bumble-Blackout",
   "category": "honey",
   "price_cents": 1400,
+  "featured_on_homepage": false,
   "on_sale": false,
   "sale_percent_off": 0,
   "currency": "USD",

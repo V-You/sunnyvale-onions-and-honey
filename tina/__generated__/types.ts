@@ -173,6 +173,7 @@ export type Product = Node & Document & {
   price_cents: Scalars['Float']['output'];
   on_sale?: Maybe<Scalars['Boolean']['output']>;
   sale_percent_off?: Maybe<Scalars['Float']['output']>;
+  featured_on_homepage?: Maybe<Scalars['Boolean']['output']>;
   currency?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   short_tagline?: Maybe<Scalars['String']['output']>;
@@ -226,6 +227,7 @@ export type ProductFilter = {
   price_cents?: InputMaybe<NumberFilter>;
   on_sale?: InputMaybe<BooleanFilter>;
   sale_percent_off?: InputMaybe<NumberFilter>;
+  featured_on_homepage?: InputMaybe<BooleanFilter>;
   currency?: InputMaybe<StringFilter>;
   description?: InputMaybe<StringFilter>;
   short_tagline?: InputMaybe<StringFilter>;
@@ -325,6 +327,7 @@ export type ProductMutation = {
   price_cents?: InputMaybe<Scalars['Float']['input']>;
   on_sale?: InputMaybe<Scalars['Boolean']['input']>;
   sale_percent_off?: InputMaybe<Scalars['Float']['input']>;
+  featured_on_homepage?: InputMaybe<Scalars['Boolean']['input']>;
   currency?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   short_tagline?: InputMaybe<Scalars['String']['input']>;
@@ -339,14 +342,14 @@ export type ProductMutation = {
   in_stock?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-export type ProductPartsFragment = { __typename: 'Product', sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null };
+export type ProductPartsFragment = { __typename: 'Product', sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, featured_on_homepage?: boolean | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null };
 
 export type ProductQueryVariables = Exact<{
   relativePath: Scalars['String']['input'];
 }>;
 
 
-export type ProductQuery = { __typename?: 'Query', product: { __typename: 'Product', id: string, sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } };
+export type ProductQuery = { __typename?: 'Query', product: { __typename: 'Product', id: string, sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, featured_on_homepage?: boolean | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } };
 
 export type ProductConnectionQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
@@ -358,7 +361,7 @@ export type ProductConnectionQueryVariables = Exact<{
 }>;
 
 
-export type ProductConnectionQuery = { __typename?: 'Query', productConnection: { __typename?: 'ProductConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges?: Array<{ __typename?: 'ProductConnectionEdges', cursor: string, node?: { __typename: 'Product', id: string, sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } | null> | null } };
+export type ProductConnectionQuery = { __typename?: 'Query', productConnection: { __typename?: 'ProductConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges?: Array<{ __typename?: 'ProductConnectionEdges', cursor: string, node?: { __typename: 'Product', id: string, sku: string, name: string, category?: string | null, price_cents: number, on_sale?: boolean | null, sale_percent_off?: number | null, featured_on_homepage?: boolean | null, currency?: string | null, description?: string | null, short_tagline?: string | null, color?: string | null, flavor_profile?: Array<string | null> | null, intensity?: number | null, gift_score?: number | null, weight_grams?: number | null, allergens?: Array<string | null> | null, tags?: Array<string | null> | null, image_url?: string | null, in_stock?: boolean | null, _sys: { __typename?: 'SystemInfo', filename: string, basename: string, hasReferences?: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } | null> | null } };
 
 export const ProductPartsFragmentDoc = gql`
     fragment ProductParts on Product {
@@ -369,6 +372,7 @@ export const ProductPartsFragmentDoc = gql`
   price_cents
   on_sale
   sale_percent_off
+  featured_on_homepage
   currency
   description
   short_tagline

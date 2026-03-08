@@ -6,6 +6,7 @@ export interface Product {
   price_cents: number;
   on_sale: boolean;
   sale_percent_off: number;
+  featured_on_homepage: boolean;
   currency: string;
   description: string;
   short_tagline: string;

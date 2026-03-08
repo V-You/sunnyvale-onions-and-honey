@@ -3,6 +3,7 @@
   "name": "The Root of All Evil",
   "category": "onion",
   "price_cents": 999,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "A dark purple heirloom onion with an earthy, complex flavor. For those who embrace the dark side.",
   "short_tagline": "Embrace the dark side",
