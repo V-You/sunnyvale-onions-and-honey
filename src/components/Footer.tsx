@@ -26,7 +26,7 @@ const footerEntries: FooterModalEntry[] = [
       {
         heading: "Agent-friendly",
         body:
-          "AI shopping agents can discover products and buy through ACP. The shop speaks both human and machine, with a public manifest and checkout session APIs that are designed for automated clients.",
+          "AI shopping agents can discover products and buy through <a href='https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json'>ACP</a>. The shop speaks both human and machine, with a public manifest and checkout session APIs that are designed for automated clients.",
       },
     ],
   },
