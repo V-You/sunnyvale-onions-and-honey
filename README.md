@@ -140,3 +140,9 @@ curl -s http://localhost:3000/.well-known/acp.json
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.
 - **Stored-credential compliance** -- document card-network stored-credential programme requirements for reusing Evervault-encrypted card data across sessions.
 - **Enclave payment broker** -- move PSP credentials from Pages secrets into an Evervault Enclave, leaving only an Evervault-scoped invoke secret in edge runtime.
+- **Add UCP / AP2 support**, alongside ACP.
+- **Actual Agentic Shopping** -- since that part does not work at all from shopper point of view, despite widely publicized E2E payments that were allegedly done, or blog postings describing API behavior and outlooks. The actual clients that a regular shopper has access to today refuse to go further than selecting items and filling the cart. Most go via the web page which is painfully slow. Revisit some time later.
+  - https://www.agenticcommerce.dev/docs/reference/checkout
+  - https://github.com/agentic-commerce-protocol/agentic-commerce-protocol
+  - https://opascope.com/insights/ai-shopping-assistant-guide-2026-agentic-commerce-protocols/#acp-vs-ucp-comparing-ai-commerce-protocols
+  - https://www.griddynamics.com/blog/agentic-payments
