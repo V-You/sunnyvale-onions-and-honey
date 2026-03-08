@@ -2,7 +2,10 @@
 
 import { startTransition, useDeferredValue, useState } from "react";
 import ProductCard from "@/components/ProductCard";
-import { getProductEffectivePriceCents } from "@/lib/product-pricing";
+import {
+  getProductEffectivePriceCents,
+  isProductOnSale,
+} from "@/lib/product-pricing";
 import type { Product } from "@/lib/types";
 
 type CategoryFilter = "all" | "onion" | "honey";
@@ -28,7 +31,9 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
   const [minimumGiftScore, setMinimumGiftScore] = useState(0);
   const [priceCeiling, setPriceCeiling] = useState<string>("all");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("featured");
+  const [advancedFiltersCollapsed, setAdvancedFiltersCollapsed] = useState(true);
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const searchableText = deferredSearchQuery.trim().toLowerCase();
@@ -58,6 +63,10 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
       }
 
       if (inStockOnly && !product.in_stock) {
+        return false;
+      }
+
+      if (onSaleOnly && !isProductOnSale(product)) {
         return false;
       }
 
@@ -101,8 +110,18 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
     minimumGiftScore > 0,
     priceCeiling !== "all",
     inStockOnly,
+    onSaleOnly,
     searchableText.length > 0,
     sortMode !== "featured",
+  ].filter(Boolean).length;
+
+  const advancedFilterCount = [
+    category !== "all",
+    selectedTag !== "all",
+    minimumGiftScore > 0,
+    priceCeiling !== "all",
+    inStockOnly,
+    onSaleOnly,
   ].filter(Boolean).length;
 
   function resetFilters() {
@@ -113,7 +132,9 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
       setMinimumGiftScore(0);
       setPriceCeiling("all");
       setInStockOnly(false);
+      setOnSaleOnly(false);
       setSortMode("featured");
+      setAdvancedFiltersCollapsed(true);
     });
   }
 
@@ -173,111 +194,164 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
           </label>
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-4">
-          <div className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4">
-            <p className="text-sm font-medium text-[var(--color-brown)]">Category</p>
-            <div className="flex flex-wrap gap-2">
-              {([
-                ["all", "Everything"],
-                ["onion", "Onions"],
-                ["honey", "Honey"],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setCategory(value)}
-                  className={`rounded-full px-3 py-2 text-sm font-medium transition ${
-                    category === value
-                      ? "bg-[var(--color-green-dark)] text-[var(--color-cream)]"
-                      : "bg-white text-[var(--color-green-dark)] hover:bg-[var(--color-green-dark)]/5"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+        <div className="mt-6 border-t border-[var(--color-green-dark)]/10 pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-brown)]">Advanced filters</p>
+              <p className="text-sm text-[var(--color-brown)]/70">
+                {advancedFilterCount === 0
+                  ? "Category, sale, stock, price, and tag filters are currently hidden."
+                  : `${advancedFilterCount} advanced filters are active.`}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setAdvancedFiltersCollapsed((current) => !current)}
+              className="rounded-full border border-[var(--color-green-dark)]/15 px-4 py-2 text-sm font-medium text-[var(--color-green-dark)] transition hover:bg-[var(--color-green-dark)]/5"
+            >
+              {advancedFiltersCollapsed ? "Show filters" : "Hide filters"}
+            </button>
           </div>
 
-          <label className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4">
-            <span className="text-sm font-medium text-[var(--color-brown)]">Price ceiling</span>
-            <select
-              value={priceCeiling}
-              onChange={(event) => setPriceCeiling(event.target.value)}
-              className="w-full rounded-xl border border-[var(--color-brown)]/15 bg-white px-3 py-2 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
-            >
-              {PRICE_FILTERS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!advancedFiltersCollapsed && (
+            <>
+              <div className="mt-6 grid gap-4 lg:grid-cols-5">
+                <div className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4 lg:col-span-2">
+                  <p className="text-sm font-medium text-[var(--color-brown)]">Category</p>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      ["all", "Everything"],
+                      ["onion", "Onions"],
+                      ["honey", "Honey"],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setCategory(value)}
+                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                          category === value
+                            ? "bg-[var(--color-green-dark)] text-[var(--color-cream)]"
+                            : "bg-white text-[var(--color-green-dark)] hover:bg-[var(--color-green-dark)]/5"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <label className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4">
-            <span className="text-sm font-medium text-[var(--color-brown)]">Minimum gift score</span>
-            <select
-              value={String(minimumGiftScore)}
-              onChange={(event) => setMinimumGiftScore(Number(event.target.value))}
-              className="w-full rounded-xl border border-[var(--color-brown)]/15 bg-white px-3 py-2 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
-            >
-              <option value="0">Any gift score</option>
-              <option value="3">3 and up</option>
-              <option value="4">4 and up</option>
-              <option value="5">Only perfect 5s</option>
-            </select>
-          </label>
+                <label className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4">
+                  <span className="text-sm font-medium text-[var(--color-brown)]">Price ceiling</span>
+                  <select
+                    value={priceCeiling}
+                    onChange={(event) => setPriceCeiling(event.target.value)}
+                    className="w-full rounded-xl border border-[var(--color-brown)]/15 bg-white px-3 py-2 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+                  >
+                    {PRICE_FILTERS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-          <label className="flex items-center gap-3 rounded-2xl bg-[var(--color-cream)] p-4 text-sm font-medium text-[var(--color-brown)]">
-            <input
-              type="checkbox"
-              checked={inStockOnly}
-              onChange={(event) => setInStockOnly(event.target.checked)}
-              className="h-4 w-4 rounded border-[var(--color-brown)]/30 text-[var(--color-green-dark)] focus:ring-[var(--color-amber)]/30"
-            />
-            Only show in-stock items
-          </label>
-        </div>
+                <label className="space-y-3 rounded-2xl bg-[var(--color-cream)] p-4">
+                  <span className="text-sm font-medium text-[var(--color-brown)]">Minimum gift score</span>
+                  <select
+                    value={String(minimumGiftScore)}
+                    onChange={(event) => setMinimumGiftScore(Number(event.target.value))}
+                    className="w-full rounded-xl border border-[var(--color-brown)]/15 bg-white px-3 py-2 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+                  >
+                    <option value="0">Any gift score</option>
+                    <option value="3">3 and up</option>
+                    <option value="4">4 and up</option>
+                    <option value="5">Only perfect 5s</option>
+                  </select>
+                </label>
 
-        <div className="mt-6 flex flex-wrap items-start gap-3">
-          <span className="pt-2 text-sm font-medium text-[var(--color-brown)]">Tag filter</span>
-          <button
-            type="button"
-            onClick={() => setSelectedTag("all")}
-            className={`rounded-full px-3 py-2 text-sm transition ${
-              selectedTag === "all"
-                ? "bg-[var(--color-amber-dark)] text-white"
-                : "bg-white text-[var(--color-brown)] hover:bg-[var(--color-brown)]/5"
-            }`}
-          >
-            All tags
-          </button>
-          {availableTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => setSelectedTag(tag)}
-              className={`rounded-full px-3 py-2 text-sm transition ${
-                selectedTag === tag
-                  ? "bg-[var(--color-green-dark)] text-[var(--color-cream)]"
-                  : "bg-white text-[var(--color-brown)] hover:bg-[var(--color-brown)]/5"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
+                <div className="space-y-4 rounded-2xl bg-[var(--color-cream)] p-4">
+                  <label className="flex items-center gap-3 text-sm font-medium text-[var(--color-brown)]">
+                    <input
+                      type="checkbox"
+                      checked={inStockOnly}
+                      onChange={(event) => setInStockOnly(event.target.checked)}
+                      className="h-4 w-4 rounded border-[var(--color-brown)]/30 text-[var(--color-green-dark)] focus:ring-[var(--color-amber)]/30"
+                    />
+                    Only show in-stock items
+                  </label>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--color-green-dark)]/10 pt-6">
-          <p className="text-sm text-[var(--color-brown)]">
-            Showing <span className="font-semibold text-[var(--color-green-dark)]">{filteredProducts.length}</span> of {products.length} products.
-          </p>
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="rounded-full border border-[var(--color-green-dark)]/15 px-4 py-2 text-sm font-medium text-[var(--color-green-dark)] transition hover:bg-[var(--color-green-dark)]/5"
-          >
-            Clear filters
-          </button>
+                  <label className="flex items-center gap-3 text-sm font-medium text-[var(--color-brown)]">
+                    <input
+                      type="checkbox"
+                      checked={onSaleOnly}
+                      onChange={(event) => setOnSaleOnly(event.target.checked)}
+                      className="h-4 w-4 rounded border-[var(--color-brown)]/30 text-[var(--color-green-dark)] focus:ring-[var(--color-amber)]/30"
+                    />
+                    Only show sale items
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-start gap-3">
+                <span className="pt-2 text-sm font-medium text-[var(--color-brown)]">Tag filter</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTag("all")}
+                  className={`rounded-full px-3 py-2 text-sm transition ${
+                    selectedTag === "all"
+                      ? "bg-[var(--color-amber-dark)] text-white"
+                      : "bg-white text-[var(--color-brown)] hover:bg-[var(--color-brown)]/5"
+                  }`}
+                >
+                  All tags
+                </button>
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setSelectedTag(tag)}
+                    className={`rounded-full px-3 py-2 text-sm transition ${
+                      selectedTag === tag
+                        ? "bg-[var(--color-green-dark)] text-[var(--color-cream)]"
+                        : "bg-white text-[var(--color-brown)] hover:bg-[var(--color-brown)]/5"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--color-green-dark)]/10 pt-6">
+                <p className="text-sm text-[var(--color-brown)]">
+                  Showing <span className="font-semibold text-[var(--color-green-dark)]">{filteredProducts.length}</span> of {products.length} products.
+                </p>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="rounded-full border border-[var(--color-green-dark)]/15 px-4 py-2 text-sm font-medium text-[var(--color-green-dark)] transition hover:bg-[var(--color-green-dark)]/5"
+                >
+                  Clear filters
+                </button>
+              </div>
+            </>
+          )}
+
+          {advancedFiltersCollapsed && (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--color-green-dark)]/10 pt-6">
+              <p className="text-sm text-[var(--color-brown)]">
+                Showing <span className="font-semibold text-[var(--color-green-dark)]">{filteredProducts.length}</span> of {products.length} products.
+              </p>
+              {advancedFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="rounded-full border border-[var(--color-green-dark)]/15 px-4 py-2 text-sm font-medium text-[var(--color-green-dark)] transition hover:bg-[var(--color-green-dark)]/5"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

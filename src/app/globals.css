@@ -16,7 +16,7 @@ body {
   color: var(--color-green-dark);
 }
 
-div.header nav a.text-xl {display:none}
+header nav a.text-xl {display:none}
 
 #hero {
   background-image: url("/logo.png");

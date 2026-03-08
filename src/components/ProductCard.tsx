@@ -21,32 +21,38 @@ export default function ProductCard({ product }: { product: Product }) {
       href={`/products/${product.sku}`}
       className="group block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
-      <ProductImage
-        src={product.image_url}
-        alt={product.name}
-        category={product.category}
-        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-        className="aspect-square bg-gradient-to-br from-amber-50 to-green-50"
-        imageClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      />
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-[var(--color-green-dark)] group-hover:text-[var(--color-amber-dark)] transition-colors">
-            {product.name}
-          </h3>
-          <div className="flex flex-wrap justify-end gap-2">
-            {onSale && (
-              <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-[var(--color-amber-dark)]">
-                {salePercentOff}% off
-              </span>
-            )}
-            {!product.in_stock && (
-              <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">
-                Out of stock
-              </span>
-            )}
+      <div className="relative">
+        <ProductImage
+          src={product.image_url}
+          alt={product.name}
+          category={product.category}
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="aspect-square bg-gradient-to-br from-amber-50 to-green-50"
+          imageClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        {(onSale || !product.in_stock) && (
+          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+            <div>
+              {onSale && (
+                <span className="rounded-full bg-[var(--color-amber-dark)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
+                  Sale - {salePercentOff}% off
+                </span>
+              )}
+            </div>
+            <div>
+              {!product.in_stock && (
+                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
+                  Out of stock
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-[var(--color-green-dark)] group-hover:text-[var(--color-amber-dark)] transition-colors">
+          {product.name}
+        </h3>
         <p className="text-sm text-gray-500 mt-1 line-clamp-1">
           {product.short_tagline}
         </p>
