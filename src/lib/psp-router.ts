@@ -73,13 +73,37 @@ function isEncryptedCardPaymentMethod(
   return paymentMethod.type === "card" || paymentMethod.type === "saved_evervault";
 }
 
+function normalizeExpiryMonth(expiryMonth: string): string {
+  const trimmed = expiryMonth.trim();
+
+  if (/^[0-9]{1,2}$/.test(trimmed)) {
+    return trimmed.padStart(2, "0");
+  }
+
+  return trimmed;
+}
+
+function normalizeExpiryYear(expiryYear: string): string {
+  const trimmed = expiryYear.trim();
+
+  if (/^[0-9]{4}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^[0-9]{2}$/.test(trimmed)) {
+    return `20${trimmed}`;
+  }
+
+  return trimmed;
+}
+
 function getEncryptedCardData(
   paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
 ) {
   return {
     card_number: paymentMethod.card_number,
-    expiry_month: paymentMethod.expiry_month,
-    expiry_year: paymentMethod.expiry_year,
+    expiry_month: normalizeExpiryMonth(paymentMethod.expiry_month),
+    expiry_year: normalizeExpiryYear(paymentMethod.expiry_year),
     cvv: paymentMethod.cvv,
     card_holder: paymentMethod.card_holder,
   };

@@ -8,7 +8,7 @@
 - Evervault relay-based payment routing patterns
 - Cloudflare Pages deployment using `@cloudflare/next-on-pages`
 
-## implementation summary
+## Implementation summary
 
 - Next.js app with App Router pages: `/`, `/products`, `/products/[sku]`, `/cart`, `/checkout`, `/confirmation`, `/metrics`, `/admin`
 - Product catalog with 24 items in Tina-managed `content/products/*.json`
@@ -34,12 +34,20 @@
 
 ## Stack
 
-- Frontend and api: Next.js 15, React 19, TypeScript
+- Evervault for widget and PCI data (dual-custody encryption)
+- Works around vendor lock-in (see also https://www.linkedin.com/feed/update/urn:li:activity:7434222367046000640)
+- TinaCMS with GraphQL API and ACP support, manages local content plus generated static admin assets
+- Custom cart (using localStorage)
+- Evervault SDK for streamlining and making switching PSPs even easier
+- "Evervault Architect MCP" (not affiliated with Evervault), during development:
+  - Allows dev to prompt in their IDE "Add ACI Worldwide to my payment flow," the Architect MCP tells the LLM exactly which Evervault Relay configurations are needed.
+  - Streamlines setup and configuration of the online shopping workflow.
+  - Helps building an Evervault-secured shop. An AI coding agent uses it to build a shop for other AIs to buy from.
+- Frontend and API: Next.js 15, React 19, TypeScript
 - Styling: Tailwind CSS v4
 - Deployment target: Cloudflare Pages with `@cloudflare/next-on-pages`
 - Infra tooling: Cloudflare Pages Git integration
-- Security integration surface: Evervault (relay pattern)
-- CMS: Tina-managed local content plus generated static admin assets
+- Custom: PSP adapters (needed per Relay)
 
 ## Quick start
 
@@ -125,6 +133,7 @@ curl -s http://localhost:3000/.well-known/acp.json
 ## Future
 
 - **Merchant order model** -- introduce a proper order object with its own `order_id`, keeping PSP transaction IDs separate. Needed for reconciliation, refunds, and webhook-driven flows.
+- **Merchant customer ID** -- similar to the above, allow agent to ask merchant for stored cards of customer
 - **Durable Objects for checkout sessions** -- move checkout session state from KV (eventually consistent) to a Durable Object or single-coordinator pattern with strict idempotency. KV is a poor fit for mutable transaction records with create/update/complete lifecycle.
 - **Product feed enrichment** -- add checkout-eligibility flags, seller policy links, return-policy data, shipping metadata, and absolute media URLs to the `/api/products` feed to align with current commerce feed specs.
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.

@@ -141,6 +141,10 @@ function formatSavedPaymentLabel(record: SavedEvervaultPaymentRecord): string {
   return `${brand} ${lastFour}`;
 }
 
+function formatActiveProcessorLabel(processor: PSPName): string {
+  return processor === "stripe" ? "Stripe" : "ACI";
+}
+
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
 const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
 const ACP_API_KEY = process.env.NEXT_PUBLIC_ACP_API_KEY ?? "";
@@ -148,7 +152,15 @@ const EVERVAULT_CONFIGURED =
   EVERVAULT_APP_ID.length > 0 && EVERVAULT_TEAM_ID.length > 0;
 const ACP_CONFIGURED = ACP_API_KEY.length > 0;
 
-export default function CheckoutForm({ products }: { products: Product[] }) {
+export default function CheckoutForm(
+  {
+    products,
+    activeProcessor,
+  }: {
+    products: Product[];
+    activeProcessor: PSPName;
+  },
+) {
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [savedPayments, setSavedPayments] = useState<SavedEvervaultPaymentRecord[]>([]);
   const [selectedSavedPaymentId, setSelectedSavedPaymentId] = useState("");
@@ -180,6 +192,12 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       setSelectedSavedPaymentId(storedPayments[0].id);
     }
   }, []);
+
+  useEffect(() => {
+    if (activeProcessor !== "stripe" && checkoutMode === "stripe_spt") {
+      setCheckoutMode("card");
+    }
+  }, [activeProcessor, checkoutMode]);
 
   const total = cart.reduce((sum, entry) => {
     const product = products.find((candidate) => candidate.sku === entry.sku);
@@ -292,6 +310,12 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       }
 
       return savedPayment.payment_method;
+    }
+
+    if (activeProcessor !== "stripe") {
+      throw new Error(
+        "Delegated Stripe tokens are only available when ACTIVE_PSP=stripe.",
+      );
     }
 
     const token = delegatedStripeToken.trim();
@@ -486,8 +510,15 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
         label: "Saved Evervault payload",
         enabled: savedPayments.length > 0,
       },
-      { mode: "stripe_spt", label: "Delegated Stripe token", enabled: true },
     ];
+
+    if (activeProcessor === "stripe") {
+      options.push({
+        mode: "stripe_spt",
+        label: "Delegated Stripe token",
+        enabled: true,
+      });
+    }
 
     return (
       <div className="flex flex-wrap gap-2">
@@ -684,6 +715,10 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       return selectedSavedPaymentId.length === 0;
     }
 
+    if (activeProcessor !== "stripe") {
+      return true;
+    }
+
     return delegatedStripeToken.trim().length === 0;
   }
 
@@ -725,6 +760,9 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <div className="space-y-3">
           <h2 className="font-semibold text-lg">Payment details</h2>
+          <p className="text-sm text-gray-500">
+            Active processor: {formatActiveProcessorLabel(activeProcessor)}
+          </p>
           {renderPaymentModeTabs()}
         </div>
 
