@@ -6,7 +6,7 @@
 - **Ag**entic commerce via ACP discovery and checkout APIs
 - PSP portability through one routing switch
 - Evervault relay-based payment routing patterns
-- Cloudflare-first deployment using OpenNext on Workers
+- Cloudflare Pages deployment using `@cloudflare/next-on-pages`
 
 ## Implemention summary
 
@@ -30,8 +30,8 @@
 
 - Frontend and api: Next.js 15, React 19, TypeScript
 - Styling: Tailwind CSS v4
-- Deployment target: Cloudflare Workers via OpenNext
-- Infra tooling: Wrangler
+- Deployment target: Cloudflare Pages with `@cloudflare/next-on-pages`
+- Infra tooling: Cloudflare Pages Git integration
 - Security integration surface: Evervault (relay pattern)
 - CMS direction: TinaCMS config is present
 
@@ -55,12 +55,13 @@ npm run build
 npm run start
 ```
 
-Cloudflare build and deploy:
+Cloudflare Pages local validation:
 
 ```bash
-npm run cf:build
-npm run cf:deploy
+npm run pages:build
 ```
+
+Production deployments are handled by Cloudflare Pages through the connected GitHub repository.
 
 ## Environment setup 
 
@@ -76,9 +77,9 @@ Use the provided env template and set real values for:
 - ALLOWED_ORIGINS
 
 Cloudflare notes:
-- Set secrets with `wrangler secret put` for sensitive values
-- Update `wrangler.toml` with a real KV namespace id for `SESSIONS`
-- Cloudflare Pages: add compatibility flag `nodejs_compat`
+- Set build variables, secrets, and KV bindings in the Cloudflare Pages project settings
+- Bind `SESSIONS` to a KV namespace in Pages settings
+- Dynamic routes and API handlers that use server-side Pages bindings must export `runtime = "edge"`
 
 ## Local testing flow
 
@@ -99,7 +100,7 @@ curl -s http://localhost:3000/.well-known/acp.json
 
 - Checkout form uses Evervault UI Components for browser-side card encryption.
 - Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID`.
-- Future: move PSP calls into Evervault Enclave, to remove PSP secrets from CF Worker.
+- Future: move PSP calls into Evervault Enclave, to remove PSP secrets from the Pages edge runtime.
 - Current order response uses PSP IDs. Future: separate merchant order model, see below.
 - Checkout session persistence uses KV. Future hardening: see below.
 
@@ -111,4 +112,4 @@ curl -s http://localhost:3000/.well-known/acp.json
 - **Product feed enrichment** -- add checkout-eligibility flags, seller policy links, return-policy data, shipping metadata, and absolute media URLs to the `/api/products` feed to align with current commerce feed specs.
 - **Order webhooks** -- add `order.created` and `order.updated` webhook delivery for downstream systems and agent confirmation.
 - **Stored-credential compliance** -- document card-network stored-credential programme requirements for reusing Evervault-encrypted card data across sessions.
-- **Enclave payment broker** -- move PSP credentials from Worker secrets into an Evervault Enclave, leaving only an Evervault-scoped invoke secret in edge runtime.
+- **Enclave payment broker** -- move PSP credentials from Pages secrets into an Evervault Enclave, leaving only an Evervault-scoped invoke secret in edge runtime.
