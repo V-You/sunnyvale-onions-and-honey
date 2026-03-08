@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Sunnyvale Onions & Honey",
   description:
     "Boutique organic onions and specialty honey. Root access to your produce.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
