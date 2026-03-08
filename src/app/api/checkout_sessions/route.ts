@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
 import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
@@ -23,8 +24,37 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const env = getEnv();
   const origin = request.headers.get("origin");
+  const versionResult = requireAcpApiVersion(
+    request,
+    origin,
+    env,
+    CHECKOUT_SESSIONS_METHODS,
+  );
+  if (versionResult.response) {
+    return versionResult.response;
+  }
+
+  const apiVersion = versionResult.version;
+  const acpJson = (
+    body: unknown,
+    init?: { status?: number; headers?: HeadersInit },
+  ) =>
+    corsJson(
+      origin,
+      env,
+      body,
+      {
+        ...init,
+        headers: {
+          ...(init?.headers ?? {}),
+          [ACP_VERSION_HEADER]: apiVersion,
+        },
+      },
+      CHECKOUT_SESSIONS_METHODS,
+    );
   const authResponse = requireAcpAuth(request, env, CHECKOUT_SESSIONS_METHODS);
   if (authResponse) {
+    authResponse.headers.set(ACP_VERSION_HEADER, apiVersion);
     return authResponse;
   }
 
@@ -34,12 +64,9 @@ export async function POST(request: NextRequest) {
   const items = body.items;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "items array is required" },
       { status: 400 },
-      CHECKOUT_SESSIONS_METHODS,
     );
   }
 
@@ -48,30 +75,21 @@ export async function POST(request: NextRequest) {
   for (const item of items) {
     const product = getProductBySku(item.sku);
     if (!product) {
-      return corsJson(
-        origin,
-        env,
+      return acpJson(
         { error: `Unknown SKU: ${item.sku}` },
         { status: 400 },
-        CHECKOUT_SESSIONS_METHODS,
       );
     }
     if (!product.in_stock) {
-      return corsJson(
-        origin,
-        env,
+      return acpJson(
         { error: `Out of stock: ${item.sku}` },
         { status: 400 },
-        CHECKOUT_SESSIONS_METHODS,
       );
     }
     if (!item.quantity || item.quantity < 1) {
-      return corsJson(
-        origin,
-        env,
+      return acpJson(
         { error: `Invalid quantity for ${item.sku}` },
         { status: 400 },
-        CHECKOUT_SESSIONS_METHODS,
       );
     }
     cartItems.push({
@@ -112,11 +130,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return corsJson(
-    origin,
-    env,
+  return acpJson(
     session,
     { status: 201 },
-    CHECKOUT_SESSIONS_METHODS,
   );
 }

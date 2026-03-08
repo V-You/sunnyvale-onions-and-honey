@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, EvervaultProvider, themes, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
+import { ACP_LATEST_API_VERSION } from "@/lib/acp-shared";
 import {
   formatProductPrice,
   getProductEffectivePriceCents,
@@ -386,6 +387,7 @@ export default function CheckoutForm(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "API-Version": ACP_LATEST_API_VERSION,
           Authorization: `Bearer ${ACP_API_KEY}`,
         },
         body: JSON.stringify({ items: cart }),
@@ -411,6 +413,7 @@ export default function CheckoutForm(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "API-Version": ACP_LATEST_API_VERSION,
             "Idempotency-Key": `idem_${Date.now()}`,
             Authorization: `Bearer ${ACP_API_KEY}`,
           },

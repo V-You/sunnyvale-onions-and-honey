@@ -1,6 +1,6 @@
 # Sunnyvale Onions & Honey
 
-**Sunnyvale Onions & Honey** is a full-stack ecommerce shop for a farmer selling boutique onions and specialty honey online:
+**[Sunnyvale Onions & Honey](https://sunnyvale-onions-and-honey.pages.dev/)** is a full-stack ecommerce shop for a farmer selling boutique onions and specialty honey online:
 
 - Modern storefront for human shoppers
 - **Ag**entic commerce via ACP discovery and checkout APIs

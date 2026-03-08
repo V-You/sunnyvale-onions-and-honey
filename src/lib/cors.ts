@@ -14,7 +14,8 @@ export function corsHeaders(
     "Access-Control-Allow-Origin": isAllowed ? origin! : allowed[0] ?? "",
     "Access-Control-Allow-Methods": methods.join(", "),
     "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, Idempotency-Key",
+      "Content-Type, Authorization, Idempotency-Key, API-Version",
+    "Access-Control-Expose-Headers": "API-Version",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };

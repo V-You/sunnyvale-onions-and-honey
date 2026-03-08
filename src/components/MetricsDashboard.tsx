@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ACP_LATEST_API_VERSION } from "@/lib/acp-shared";
 import {
   addDemoBenchmarkRun,
   loadDemoBenchmarkRuns,
@@ -98,6 +99,7 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "API-Version": ACP_LATEST_API_VERSION,
             Authorization: `Bearer ${ACP_API_KEY}`,
           },
           body: JSON.stringify({ items: sampleItems }),

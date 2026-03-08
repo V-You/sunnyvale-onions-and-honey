@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
@@ -69,53 +70,70 @@ export async function POST(
 ) {
   const env = getEnv();
   const origin = request.headers.get("origin");
+  const versionResult = requireAcpApiVersion(
+    request,
+    origin,
+    env,
+    CHECKOUT_COMPLETE_METHODS,
+  );
+  if (versionResult.response) {
+    return versionResult.response;
+  }
+
+  const apiVersion = versionResult.version;
+  const acpJson = (
+    body: unknown,
+    init?: { status?: number; headers?: HeadersInit },
+  ) =>
+    corsJson(
+      origin,
+      env,
+      body,
+      {
+        ...init,
+        headers: {
+          ...(init?.headers ?? {}),
+          [ACP_VERSION_HEADER]: apiVersion,
+        },
+      },
+      CHECKOUT_COMPLETE_METHODS,
+    );
   const authResponse = requireAcpAuth(request, env, CHECKOUT_COMPLETE_METHODS);
   if (authResponse) {
+    authResponse.headers.set(ACP_VERSION_HEADER, apiVersion);
     return authResponse;
   }
 
   const { id } = await params;
   const idempotencyKey = request.headers.get("Idempotency-Key");
   if (!idempotencyKey) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "Idempotency-Key header required" },
       { status: 400 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
   const kv = getSessionsKV();
   if (!kv || !env) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "Service unavailable" },
       { status: 503 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
   const raw = await kv.get(id);
   if (!raw) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "Session not found" },
       { status: 404 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
   const session: CheckoutSession = JSON.parse(raw);
   if (session.status !== "open") {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "Session not open or already completed" },
       { status: 409 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
@@ -123,12 +141,9 @@ export async function POST(
   const pm = body.payment_method;
 
   if (!pm) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       { error: "payment_method is required" },
       { status: 400 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
@@ -141,15 +156,12 @@ export async function POST(
     );
 
     if (!resolvedPaymentMethod) {
-      return corsJson(
-        origin,
-        env,
+      return acpJson(
         {
           error:
             "Unknown merchant_saved_payment id. Request a fresh checkout session and use one of the advertised merchant_saved_payment_methods.",
         },
         { status: 400 },
-        CHECKOUT_COMPLETE_METHODS,
       );
     }
 
@@ -161,15 +173,12 @@ export async function POST(
     isEncryptedCardPaymentMethod(processorPaymentMethod) &&
     !hasValidEncryptedCardData(processorPaymentMethod)
   ) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       {
         error:
           "Encrypted card payment methods require card_number, expiry_month, expiry_year, and cvv",
       },
       { status: 400 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
@@ -177,15 +186,12 @@ export async function POST(
     processorPaymentMethod.type === "stripe_spt" &&
     !hasValidDelegatedStripeToken(processorPaymentMethod)
   ) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       {
         error:
           "Delegated Stripe payments require payment_method_id or confirmation_token",
       },
       { status: 400 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
@@ -193,15 +199,12 @@ export async function POST(
     !isEncryptedCardPaymentMethod(processorPaymentMethod) &&
     processorPaymentMethod.type !== "stripe_spt"
   ) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       {
         error:
           "Unsupported payment_method type. Use card, merchant_saved_payment, saved_evervault, or stripe_spt.",
       },
       { status: 400 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 
@@ -226,9 +229,7 @@ export async function POST(
 
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       {
         status: session.status,
         order_id: result.order_id,
@@ -248,12 +249,9 @@ export async function POST(
           : result.error ?? result.result_description,
       },
       undefined,
-      CHECKOUT_COMPLETE_METHODS,
     );
   } catch (error) {
-    return corsJson(
-      origin,
-      env,
+    return acpJson(
       {
         status: "failed",
         error: "Payment processing failed",
@@ -263,7 +261,6 @@ export async function POST(
             : "Unknown payment processing error",
       },
       { status: 502 },
-      CHECKOUT_COMPLETE_METHODS,
     );
   }
 }
