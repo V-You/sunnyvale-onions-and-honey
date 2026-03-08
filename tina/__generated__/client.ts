@@ -1,5 +1,5 @@
 import { createClient } from "tinacms/dist/client";
 import { queries } from "./types";
-export const client = createClient({ cacheDir: '/home/snlr/code/sunnyvale-onions-and-honey/tina/__generated__/.cache/1772959833755', url: 'http://localhost:4001/graphql', token: 'xxx', queries,  });
+export const client = createClient({ cacheDir: '/home/snlr/code/sunnyvale-onions-and-honey/tina/__generated__/.cache/1772974518991', url: 'http://localhost:4001/graphql', token: 'xxx', queries,  });
 export default client;
   
