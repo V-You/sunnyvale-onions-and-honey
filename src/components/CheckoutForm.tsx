@@ -382,6 +382,10 @@ export default function CheckoutForm(
       }
 
       const paymentMethod = buildPaymentMethod();
+      const checkoutItems = cart.map((entry) => ({
+        id: entry.sku,
+        quantity: entry.quantity,
+      }));
 
       const sessionResp = await fetch("/api/checkout_sessions", {
         method: "POST",
@@ -390,7 +394,17 @@ export default function CheckoutForm(
           "API-Version": ACP_LATEST_API_VERSION,
           Authorization: `Bearer ${ACP_API_KEY}`,
         },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({
+          items: checkoutItems,
+          capabilities: {
+            interventions: {
+              supported: [],
+              display_context: "webview",
+              redirect_context: "in_app",
+              max_interaction_depth: 1,
+            },
+          },
+        }),
       });
 
       const sessionPayload = await readApiResponse(sessionResp);

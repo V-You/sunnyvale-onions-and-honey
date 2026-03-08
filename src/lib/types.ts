@@ -50,8 +50,125 @@ export interface PaymentMetrics {
   steps: PaymentMetricStep[];
 }
 
+export type AcpInterventionType =
+  | "3ds"
+  | "biometric"
+  | "address_verification";
+
+export interface AcpInterventionRequestCapabilities {
+  supported: AcpInterventionType[];
+  display_context?: string;
+  redirect_context?: string;
+  max_redirects?: number;
+  max_interaction_depth?: number;
+}
+
+export interface AcpInterventionResponseCapabilities {
+  supported: AcpInterventionType[];
+  required?: AcpInterventionType[];
+  enforcement?: "always" | "conditional";
+}
+
+export interface AcpAgentCapabilities {
+  interventions?: AcpInterventionRequestCapabilities;
+}
+
+export interface AcpPaymentMethodDescriptor {
+  method: string;
+  brands?: string[];
+  funding_types?: Array<"credit" | "debit" | "prepaid">;
+}
+
+export interface AcpPaymentHandler {
+  id: string;
+  name: string;
+  version: string;
+  spec: string;
+  requires_delegate_payment: boolean;
+  requires_pci_compliance: boolean;
+  psp: string;
+  config_schema: string;
+  instrument_schemas: string[];
+  config: Record<string, unknown>;
+  display_order?: number;
+  display_name?: string;
+}
+
 export interface CheckoutCapabilities {
-  payment_methods: string[];
+  payment_methods: Array<string | AcpPaymentMethodDescriptor>;
+  interventions?: AcpInterventionResponseCapabilities;
+  payment?: {
+    handlers: AcpPaymentHandler[];
+  };
+}
+
+export interface AcpCheckoutItemInput {
+  id?: string;
+  sku?: string;
+  quantity: number;
+}
+
+export interface AcpCheckoutBuyer {
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
+}
+
+export interface AcpCheckoutSessionCreateRequest {
+  items?: AcpCheckoutItemInput[];
+  buyer?: AcpCheckoutBuyer;
+  capabilities?: AcpAgentCapabilities;
+}
+
+export interface AcpCheckoutSessionLineItem {
+  id: string;
+  item: {
+    id: string;
+    quantity: number;
+  };
+  base_amount: number;
+  discount: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  name?: string;
+  description?: string;
+  unit_amount?: number;
+}
+
+export interface AcpCheckoutTotal {
+  type: string;
+  display_text: string;
+  amount: number;
+  description?: string;
+}
+
+export interface AcpCheckoutMessage {
+  type: "info" | "error";
+  content_type: "plain" | "markdown";
+  content: string;
+}
+
+export interface AcpCheckoutLink {
+  type: "terms_of_use" | "privacy_policy" | "return_policy";
+  url: string;
+}
+
+export interface AcpCheckoutSessionResponse {
+  id: string;
+  status:
+    | "not_ready_for_payment"
+    | "ready_for_payment"
+    | "completed"
+    | "canceled"
+    | "in_progress";
+  currency: string;
+  capabilities: CheckoutCapabilities;
+  line_items: AcpCheckoutSessionLineItem[];
+  totals: AcpCheckoutTotal[];
+  messages: AcpCheckoutMessage[];
+  links: AcpCheckoutLink[];
 }
 
 export interface MerchantSavedPaymentDisplayMetadata {
@@ -78,6 +195,7 @@ export interface CheckoutSession {
   currency: string;
   allowed_payment_methods: string[];
   capabilities?: CheckoutCapabilities;
+  agent_capabilities?: AcpAgentCapabilities;
   merchant_saved_payment_methods?: MerchantSavedPaymentOption[];
   created_at: number;
   order_id?: string;

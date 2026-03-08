@@ -79,7 +79,7 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
       }
 
       const sampleItems = products.slice(0, 2).map((product) => ({
-        sku: product.sku,
+        id: product.sku,
         quantity: 1,
       }));
       const iterations = 5;
@@ -102,7 +102,14 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
             "API-Version": ACP_LATEST_API_VERSION,
             Authorization: `Bearer ${ACP_API_KEY}`,
           },
-          body: JSON.stringify({ items: sampleItems }),
+          body: JSON.stringify({
+            items: sampleItems,
+            capabilities: {
+              interventions: {
+                supported: [],
+              },
+            },
+          }),
         });
 
         if (!sessionResponse.ok) {

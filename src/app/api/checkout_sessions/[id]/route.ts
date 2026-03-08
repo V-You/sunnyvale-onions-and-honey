@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
+import {
+  createCheckoutCapabilities,
+  createCheckoutSessionResponse,
+  normalizeAgentCapabilities,
+  normalizeCheckoutItems,
+} from "@/lib/acp-checkout";
 import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
+import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
-import type { CheckoutSession, CartItem } from "@/lib/types";
+import type {
+  AcpCheckoutSessionCreateRequest,
+  CheckoutSession,
+  CartItem,
+} from "@/lib/types";
 
 export const runtime = "edge";
 
@@ -82,7 +93,7 @@ export async function GET(
   }
 
   return acpJson(
-    JSON.parse(raw),
+    createCheckoutSessionResponse(JSON.parse(raw), env.ACTIVE_PSP),
     undefined,
   );
 }
@@ -156,10 +167,8 @@ export async function PATCH(
     );
   }
 
-  const body = (await request.json()) as {
-    items?: { sku: string; quantity: number }[];
-  };
-  const items = body.items;
+  const body = (await request.json()) as AcpCheckoutSessionCreateRequest;
+  const items = normalizeCheckoutItems(body.items);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return acpJson(
@@ -202,13 +211,30 @@ export async function PATCH(
     (sum, i) => sum + i.price_cents * i.quantity,
     0,
   );
+  session.agent_capabilities = normalizeAgentCapabilities(
+    body.capabilities ?? session.agent_capabilities,
+  );
+  session.merchant_saved_payment_methods = getMerchantSavedPaymentMethods(
+    env.ACTIVE_PSP,
+  );
+  session.allowed_payment_methods = [
+    "card",
+    ...(session.merchant_saved_payment_methods.length > 0
+      ? ["merchant_saved_payment"]
+      : []),
+  ];
+  session.capabilities = createCheckoutCapabilities(
+    env.ACTIVE_PSP,
+    session.merchant_saved_payment_methods,
+    session.agent_capabilities,
+  );
 
   await kv.put(session.id, JSON.stringify(session), {
     expirationTtl: 1800,
   });
 
   return acpJson(
-    session,
+    createCheckoutSessionResponse(session, env.ACTIVE_PSP),
     undefined,
   );
 }

@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
+import {
+  createCheckoutCapabilities,
+  createCheckoutSessionResponse,
+  normalizeAgentCapabilities,
+  normalizeCheckoutItems,
+} from "@/lib/acp-checkout";
 import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
 import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
-import type { CheckoutSession, CartItem } from "@/lib/types";
+import type {
+  AcpCheckoutSessionCreateRequest,
+  CheckoutSession,
+  CartItem,
+} from "@/lib/types";
 
 export const runtime = "edge";
 
@@ -58,10 +68,9 @@ export async function POST(request: NextRequest) {
     return authResponse;
   }
 
-  const body = (await request.json()) as {
-    items?: { sku: string; quantity: number }[];
-  };
-  const items = body.items;
+  const body = (await request.json()) as AcpCheckoutSessionCreateRequest;
+  const items = normalizeCheckoutItems(body.items);
+  const agentCapabilities = normalizeAgentCapabilities(body.capabilities);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return acpJson(
@@ -107,7 +116,17 @@ export async function POST(request: NextRequest) {
   const merchantSavedPaymentMethods = getMerchantSavedPaymentMethods(
     env.ACTIVE_PSP,
   );
-  const allowedPaymentMethods = ["card", "merchant_saved_payment"];
+  const allowedPaymentMethods = [
+    "card",
+    ...(merchantSavedPaymentMethods.length > 0
+      ? ["merchant_saved_payment"]
+      : []),
+  ];
+  const capabilities = createCheckoutCapabilities(
+    env.ACTIVE_PSP,
+    merchantSavedPaymentMethods,
+    agentCapabilities,
+  );
 
   const session: CheckoutSession = {
     id: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -116,9 +135,8 @@ export async function POST(request: NextRequest) {
     amount_total_cents: amountTotal,
     currency: "USD",
     allowed_payment_methods: allowedPaymentMethods,
-    capabilities: {
-      payment_methods: allowedPaymentMethods,
-    },
+    capabilities,
+    agent_capabilities: agentCapabilities,
     merchant_saved_payment_methods: merchantSavedPaymentMethods,
     created_at: Date.now(),
   };
@@ -131,7 +149,7 @@ export async function POST(request: NextRequest) {
   }
 
   return acpJson(
-    session,
+    createCheckoutSessionResponse(session, env.ACTIVE_PSP),
     { status: 201 },
   );
 }
