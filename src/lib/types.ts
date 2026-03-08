@@ -104,6 +104,7 @@ export interface Env {
   ACI_RELAY_DOMAIN: string;
   STRIPE_RELAY_DOMAIN: string;
   ACTIVE_PSP: string;
+  ACP_API_KEYS: string;
   ACI_ENTITY_ID: string;
   ACI_TOKEN: string;
   STRIPE_SECRET_KEY: string;

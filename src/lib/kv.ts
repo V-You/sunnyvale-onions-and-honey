@@ -68,6 +68,7 @@ export function getEnv(): Partial<Env> {
     EV_API_KEY: process.env.EV_API_KEY,
     EV_APP_ID: process.env.EV_APP_ID,
     ACTIVE_PSP: process.env.ACTIVE_PSP,
+    ACP_API_KEYS: process.env.ACP_API_KEYS,
     ACI_ENTITY_ID: process.env.ACI_ENTITY_ID,
     ACI_TOKEN: process.env.ACI_TOKEN,
     ACI_RELAY_DOMAIN: process.env.ACI_RELAY_DOMAIN,

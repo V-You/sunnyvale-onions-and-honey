@@ -111,8 +111,10 @@ function resolveCartItems(
 
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
 const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
+const ACP_API_KEY = process.env.NEXT_PUBLIC_ACP_API_KEY ?? "";
 const EVERVAULT_CONFIGURED =
   EVERVAULT_APP_ID.length > 0 && EVERVAULT_TEAM_ID.length > 0;
+const ACP_CONFIGURED = ACP_API_KEY.length > 0;
 
 export default function CheckoutForm({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartEntry[]>([]);
@@ -204,9 +206,18 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
 
     try {
       // step 1: create checkout session
+      if (!ACP_CONFIGURED) {
+        throw new Error(
+          "ACP auth is not configured. Set NEXT_PUBLIC_ACP_API_KEY.",
+        );
+      }
+
       const sessionResp = await fetch("/api/checkout_sessions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ACP_API_KEY}`,
+        },
         body: JSON.stringify({ items: cart }),
       });
 
@@ -244,6 +255,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
           headers: {
             "Content-Type": "application/json",
             "Idempotency-Key": `idem_${Date.now()}`,
+            Authorization: `Bearer ${ACP_API_KEY}`,
           },
           body: JSON.stringify({
             payment_method: {
@@ -395,6 +407,11 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
             Evervault UI Components failed to load. Please refresh and try again.
           </p>
         )}
+        {!ACP_CONFIGURED && (
+          <p className="text-sm text-red-700 bg-red-50 rounded-lg p-3">
+            ACP auth is not configured. Add NEXT_PUBLIC_ACP_API_KEY.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -417,6 +434,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
         disabled={
           submitting ||
           !EVERVAULT_CONFIGURED ||
+          !ACP_CONFIGURED ||
           evervaultLoadError ||
           !cardComplete ||
           !encryptedCard

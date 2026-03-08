@@ -1,20 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProductBySku } from "@/lib/catalog";
+import { requireAcpAuth } from "@/lib/acp-auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
+import { getEnv, getSessionsKV } from "@/lib/kv";
 import type { CheckoutSession, CartItem } from "@/lib/types";
-import { getSessionsKV } from "@/lib/kv";
 
 export const runtime = "edge";
 
+const CHECKOUT_SESSIONS_METHODS = ["POST", "OPTIONS"] as const;
+
+export async function OPTIONS(request: NextRequest) {
+  const env = getEnv();
+  return corsPreflight(
+    request.headers.get("origin"),
+    env,
+    CHECKOUT_SESSIONS_METHODS,
+  );
+}
+
 export async function POST(request: NextRequest) {
+  const env = getEnv();
+  const origin = request.headers.get("origin");
+  const authResponse = requireAcpAuth(request, env, CHECKOUT_SESSIONS_METHODS);
+  if (authResponse) {
+    return authResponse;
+  }
+
   const body = (await request.json()) as {
     items?: { sku: string; quantity: number }[];
   };
   const items = body.items;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return NextResponse.json(
+    return corsJson(
+      origin,
+      env,
       { error: "items array is required" },
       { status: 400 },
+      CHECKOUT_SESSIONS_METHODS,
     );
   }
 
@@ -23,21 +46,30 @@ export async function POST(request: NextRequest) {
   for (const item of items) {
     const product = getProductBySku(item.sku);
     if (!product) {
-      return NextResponse.json(
+      return corsJson(
+        origin,
+        env,
         { error: `Unknown SKU: ${item.sku}` },
         { status: 400 },
+        CHECKOUT_SESSIONS_METHODS,
       );
     }
     if (!product.in_stock) {
-      return NextResponse.json(
+      return corsJson(
+        origin,
+        env,
         { error: `Out of stock: ${item.sku}` },
         { status: 400 },
+        CHECKOUT_SESSIONS_METHODS,
       );
     }
     if (!item.quantity || item.quantity < 1) {
-      return NextResponse.json(
+      return corsJson(
+        origin,
+        env,
         { error: `Invalid quantity for ${item.sku}` },
         { status: 400 },
+        CHECKOUT_SESSIONS_METHODS,
       );
     }
     cartItems.push({
@@ -70,5 +102,11 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return NextResponse.json(session, { status: 201 });
+  return corsJson(
+    origin,
+    env,
+    session,
+    { status: 201 },
+    CHECKOUT_SESSIONS_METHODS,
+  );
 }
