@@ -3,7 +3,7 @@
   "name": "The Hive's Secret",
   "category": "honey",
   "price_cents": 4500,
-  "featured_on_homepage": true,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "A deep gold honey with complex truffle undertones. Extremely limited -- the bees won't tell us how they do it.",
   "short_tagline": "They'll never tell. Zero-Trust.",

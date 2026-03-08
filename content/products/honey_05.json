@@ -3,7 +3,7 @@
   "name": "Ghost Pepper Honey",
   "category": "honey",
   "price_cents": 1200,
-  "featured_on_homepage": false,
+  "featured_on_homepage": true,
   "on_sale": false,
   "sale_percent_off": 0,
   "currency": "USD",

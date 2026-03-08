@@ -3,7 +3,7 @@
   "name": "Onion-In-Law",
   "category": "onion",
   "price_cents": 300,
-  "featured_on_homepage": false,
+  "featured_on_homepage": true,
   "currency": "USD",
   "description": "A bitter, sharp white onion. You didn't choose it, but it's here, and it's not leaving.",
   "short_tagline": "Uninvited but unforgettable",

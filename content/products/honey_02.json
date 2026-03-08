@@ -3,7 +3,7 @@
   "name": "Zen Nectar",
   "category": "honey",
   "price_cents": 1650,
-  "featured_on_homepage": true,
+  "featured_on_homepage": false,
   "currency": "USD",
   "description": "A light gold floral honey infused with lavender notes. One spoonful and your stress melts away.",
   "short_tagline": "Inner peace, one spoonful at a time",

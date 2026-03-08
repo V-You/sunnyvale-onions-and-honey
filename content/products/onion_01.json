@@ -3,7 +3,7 @@
   "name": "The Crying Shame",
   "category": "onion",
   "price_cents": 499,
-  "featured_on_homepage": false,
+  "featured_on_homepage": true,
   "currency": "USD",
   "description": "A deeply red onion that brings tears of joy (and regular tears). Sharp, pungent, and unapologetic.",
   "short_tagline": "Tears guaranteed or your money back",
