@@ -1,0 +1,25 @@
+{
+  "sku": "honey_06",
+  "name": "Meadow's Whisper",
+  "category": "honey",
+  "price_cents": 1000,
+  "currency": "USD",
+  "description": "A gentle pale gold wildflower honey. Light, everyday, perfect on toast -- the honey that whispers.",
+  "short_tagline": "Quiet luxury for your morning",
+  "color": "pale gold",
+  "flavor_profile": [
+    "light",
+    "wildflower"
+  ],
+  "intensity": 1,
+  "gift_score": 4,
+  "weight_grams": 350,
+  "allergens": [],
+  "tags": [
+    "wildflower",
+    "everyday",
+    "gentle"
+  ],
+  "image_url": "/images/honey_06.webp",
+  "in_stock": true
+}

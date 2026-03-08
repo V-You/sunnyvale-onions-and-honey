@@ -1,0 +1,25 @@
+{
+  "sku": "onion_11",
+  "name": "Peel-Me-Maybe",
+  "category": "onion",
+  "price_cents": 400,
+  "currency": "USD",
+  "description": "A crisp, fresh light red onion. Perfect raw in salads -- this one wants to be peeled.",
+  "short_tagline": "Call me, peel me, maybe",
+  "color": "light red",
+  "flavor_profile": [
+    "crisp",
+    "fresh"
+  ],
+  "intensity": 3,
+  "gift_score": 2,
+  "weight_grams": 230,
+  "allergens": [],
+  "tags": [
+    "red",
+    "salad",
+    "raw"
+  ],
+  "image_url": "/images/onion_11.webp",
+  "in_stock": true
+}

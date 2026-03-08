@@ -1,0 +1,25 @@
+{
+  "sku": "honey_05",
+  "name": "Ghost Pepper Honey",
+  "category": "honey",
+  "price_cents": 1200,
+  "currency": "USD",
+  "description": "Sweet meets heat in this amber-red inferno. Not for the faint of heart (or tongue).",
+  "short_tagline": "Sweet heat for the brave",
+  "color": "amber-red",
+  "flavor_profile": [
+    "sweet-heat",
+    "fiery"
+  ],
+  "intensity": 5,
+  "gift_score": 2,
+  "weight_grams": 250,
+  "allergens": [],
+  "tags": [
+    "spicy",
+    "hot",
+    "challenge"
+  ],
+  "image_url": "/images/honey_05.webp",
+  "in_stock": true
+}

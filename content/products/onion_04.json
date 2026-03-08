@@ -1,0 +1,25 @@
+{
+  "sku": "onion_04",
+  "name": "The Sweetest Sob",
+  "category": "onion",
+  "price_cents": 525,
+  "currency": "USD",
+  "description": "A pale yellow vidalia-style onion so mellow it might make you emotional. Sweet as can be.",
+  "short_tagline": "Very low latency, high sweetness",
+  "color": "pale yellow",
+  "flavor_profile": [
+    "sweet",
+    "mellow"
+  ],
+  "intensity": 2,
+  "gift_score": 3,
+  "weight_grams": 275,
+  "allergens": [],
+  "tags": [
+    "vidalia",
+    "sweet",
+    "mild"
+  ],
+  "image_url": "/images/onion_04.webp",
+  "in_stock": true
+}

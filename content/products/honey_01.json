@@ -1,0 +1,25 @@
+{
+  "sku": "honey_01",
+  "name": "Angry Bee Reserve",
+  "category": "honey",
+  "price_cents": 1499,
+  "currency": "USD",
+  "description": "A dark amber artisan honey with a robust, smoky character. The bees were NOT happy making this one.",
+  "short_tagline": "Made with fury, served with love",
+  "color": "dark amber",
+  "flavor_profile": [
+    "robust",
+    "smoky"
+  ],
+  "intensity": 4,
+  "gift_score": 3,
+  "weight_grams": 340,
+  "allergens": [],
+  "tags": [
+    "dark",
+    "bold",
+    "artisan"
+  ],
+  "image_url": "/images/honey_01.webp",
+  "in_stock": true
+}

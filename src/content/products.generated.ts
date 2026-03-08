@@ -1,0 +1,608 @@
+import type { Product } from "@/lib/types";
+
+const products: Product[] = [
+  {
+    "sku": "honey_01",
+    "name": "Angry Bee Reserve",
+    "category": "honey",
+    "price_cents": 1499,
+    "currency": "USD",
+    "description": "A dark amber artisan honey with a robust, smoky character. The bees were NOT happy making this one.",
+    "short_tagline": "Made with fury, served with love",
+    "color": "dark amber",
+    "flavor_profile": [
+      "robust",
+      "smoky"
+    ],
+    "intensity": 4,
+    "gift_score": 3,
+    "weight_grams": 340,
+    "allergens": [],
+    "tags": [
+      "dark",
+      "bold",
+      "artisan"
+    ],
+    "image_url": "/images/honey_01.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_02",
+    "name": "Zen Nectar",
+    "category": "honey",
+    "price_cents": 1650,
+    "currency": "USD",
+    "description": "A light gold floral honey infused with lavender notes. One spoonful and your stress melts away.",
+    "short_tagline": "Inner peace, one spoonful at a time",
+    "color": "light gold",
+    "flavor_profile": [
+      "floral",
+      "lavender"
+    ],
+    "intensity": 2,
+    "gift_score": 5,
+    "weight_grams": 300,
+    "allergens": [],
+    "tags": [
+      "floral",
+      "calm",
+      "gift-box"
+    ],
+    "image_url": "/images/honey_02.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_03",
+    "name": "Space Dust Honey",
+    "category": "honey",
+    "price_cents": 2200,
+    "currency": "USD",
+    "description": "Infused with holographic edible glitter. A sparkly, citrus honey that is out of this world.",
+    "short_tagline": "Literally out of this world",
+    "color": "iridescent gold",
+    "flavor_profile": [
+      "sparkly",
+      "citrus"
+    ],
+    "intensity": 3,
+    "gift_score": 5,
+    "weight_grams": 280,
+    "allergens": [],
+    "tags": [
+      "glitter",
+      "novelty",
+      "gift-box"
+    ],
+    "image_url": "/images/honey_03.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_04",
+    "name": "The Hive's Secret",
+    "category": "honey",
+    "price_cents": 4500,
+    "currency": "USD",
+    "description": "A deep gold honey with complex truffle undertones. Extremely limited -- the bees won't tell us how they do it.",
+    "short_tagline": "They'll never tell. Zero-Trust.",
+    "color": "deep gold",
+    "flavor_profile": [
+      "complex",
+      "truffle"
+    ],
+    "intensity": 5,
+    "gift_score": 5,
+    "weight_grams": 200,
+    "allergens": [],
+    "tags": [
+      "rare",
+      "luxury",
+      "limited-edition"
+    ],
+    "image_url": "/images/honey_04.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_05",
+    "name": "Ghost Pepper Honey",
+    "category": "honey",
+    "price_cents": 1200,
+    "currency": "USD",
+    "description": "Sweet meets heat in this amber-red inferno. Not for the faint of heart (or tongue).",
+    "short_tagline": "Sweet heat for the brave",
+    "color": "amber-red",
+    "flavor_profile": [
+      "sweet-heat",
+      "fiery"
+    ],
+    "intensity": 5,
+    "gift_score": 2,
+    "weight_grams": 250,
+    "allergens": [],
+    "tags": [
+      "spicy",
+      "hot",
+      "challenge"
+    ],
+    "image_url": "/images/honey_05.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_06",
+    "name": "Meadow's Whisper",
+    "category": "honey",
+    "price_cents": 1000,
+    "currency": "USD",
+    "description": "A gentle pale gold wildflower honey. Light, everyday, perfect on toast -- the honey that whispers.",
+    "short_tagline": "Quiet luxury for your morning",
+    "color": "pale gold",
+    "flavor_profile": [
+      "light",
+      "wildflower"
+    ],
+    "intensity": 1,
+    "gift_score": 4,
+    "weight_grams": 350,
+    "allergens": [],
+    "tags": [
+      "wildflower",
+      "everyday",
+      "gentle"
+    ],
+    "image_url": "/images/honey_06.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_07",
+    "name": "Bees Knees",
+    "category": "honey",
+    "price_cents": 1800,
+    "currency": "USD",
+    "description": "A warm amber classic with a buttery finish. Truly the bee's knees -- as versatile as honey gets.",
+    "short_tagline": "The actual bee's knees",
+    "color": "warm amber",
+    "flavor_profile": [
+      "classic",
+      "buttery"
+    ],
+    "intensity": 3,
+    "gift_score": 4,
+    "weight_grams": 300,
+    "allergens": [],
+    "tags": [
+      "classic",
+      "versatile",
+      "bee-themed"
+    ],
+    "image_url": "/images/honey_07.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_08",
+    "name": "Sticky Situations",
+    "category": "honey",
+    "price_cents": 1100,
+    "currency": "USD",
+    "description": "Thick as molasses with a rich amber pour. Built for baking, glazing, and getting into sticky situations.",
+    "short_tagline": "Embrace the mess",
+    "color": "amber",
+    "flavor_profile": [
+      "thick",
+      "molasses"
+    ],
+    "intensity": 3,
+    "gift_score": 2,
+    "weight_grams": 400,
+    "allergens": [],
+    "tags": [
+      "thick",
+      "baking",
+      "cooking"
+    ],
+    "image_url": "/images/honey_08.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_09",
+    "name": "Pollen Punch",
+    "category": "honey",
+    "price_cents": 1350,
+    "currency": "USD",
+    "description": "A cloudy gold raw honey, unfiltered and earthy. For health enthusiasts who like their honey real.",
+    "short_tagline": "Raw, real, unfiltered",
+    "color": "cloudy gold",
+    "flavor_profile": [
+      "raw",
+      "earthy"
+    ],
+    "intensity": 4,
+    "gift_score": 2,
+    "weight_grams": 320,
+    "allergens": [
+      "pollen"
+    ],
+    "tags": [
+      "raw",
+      "unfiltered",
+      "health"
+    ],
+    "image_url": "/images/honey_09.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_10",
+    "name": "Midnight Blossom",
+    "category": "honey",
+    "price_cents": 3000,
+    "currency": "USD",
+    "description": "A near-black buckwheat honey with an intense, complex taste. For the connoisseur who's seen everything.",
+    "short_tagline": "Darkness you can taste",
+    "color": "near-black",
+    "flavor_profile": [
+      "intense",
+      "buckwheat"
+    ],
+    "intensity": 5,
+    "gift_score": 4,
+    "weight_grams": 250,
+    "allergens": [],
+    "tags": [
+      "dark",
+      "rare",
+      "connoisseur"
+    ],
+    "image_url": "/images/honey_10.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_11",
+    "name": "Waggle Dance",
+    "category": "honey",
+    "price_cents": 1500,
+    "currency": "USD",
+    "description": "A medium gold honey with a fruity, bright personality. Fun, cheerful, and gift-box ready.",
+    "short_tagline": "Shake what the bees gave you",
+    "color": "medium gold",
+    "flavor_profile": [
+      "fruity",
+      "bright"
+    ],
+    "intensity": 2,
+    "gift_score": 4,
+    "weight_grams": 300,
+    "allergens": [],
+    "tags": [
+      "fun",
+      "fruity",
+      "gift-box"
+    ],
+    "image_url": "/images/honey_11.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "honey_12",
+    "name": "Bumble-Blackout",
+    "category": "honey",
+    "price_cents": 1400,
+    "currency": "USD",
+    "description": "A dark brown honey with a malty, rich depth. Bold enough to stand up to strong cheese and dark bread.",
+    "short_tagline": "Bold move in a jar",
+    "color": "dark brown",
+    "flavor_profile": [
+      "malty",
+      "rich"
+    ],
+    "intensity": 4,
+    "gift_score": 3,
+    "weight_grams": 340,
+    "allergens": [],
+    "tags": [
+      "dark",
+      "strong",
+      "bold"
+    ],
+    "image_url": "/images/honey_12.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_01",
+    "name": "The Crying Shame",
+    "category": "onion",
+    "price_cents": 499,
+    "currency": "USD",
+    "description": "A deeply red onion that brings tears of joy (and regular tears). Sharp, pungent, and unapologetic.",
+    "short_tagline": "Tears guaranteed or your money back",
+    "color": "deep red",
+    "flavor_profile": [
+      "sharp",
+      "pungent"
+    ],
+    "intensity": 5,
+    "gift_score": 1,
+    "weight_grams": 250,
+    "allergens": [],
+    "tags": [
+      "red",
+      "cooking",
+      "bold"
+    ],
+    "image_url": "/images/onion_01.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_02",
+    "name": "Breath-Taker Shallots",
+    "category": "onion",
+    "price_cents": 650,
+    "currency": "USD",
+    "description": "Elegant golden-brown shallots with a buttery, mild flavor. Perfect for gourmet dishes and impressing dinner guests.",
+    "short_tagline": "Delicate enough for a first date",
+    "color": "golden brown",
+    "flavor_profile": [
+      "buttery",
+      "mild"
+    ],
+    "intensity": 2,
+    "gift_score": 3,
+    "weight_grams": 200,
+    "allergens": [],
+    "tags": [
+      "shallot",
+      "gourmet",
+      "delicate"
+    ],
+    "image_url": "/images/onion_02.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_03",
+    "name": "Sunnyvale Gold",
+    "category": "onion",
+    "price_cents": 800,
+    "currency": "USD",
+    "description": "Our signature golden yellow onion. Sweet and caramelized straight from the earth -- the one that started it all.",
+    "short_tagline": "The original Sunnyvale signature",
+    "color": "golden yellow",
+    "flavor_profile": [
+      "sweet",
+      "caramelized"
+    ],
+    "intensity": 3,
+    "gift_score": 4,
+    "weight_grams": 300,
+    "allergens": [],
+    "tags": [
+      "yellow",
+      "sweet",
+      "signature"
+    ],
+    "image_url": "/images/onion_03.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_04",
+    "name": "The Sweetest Sob",
+    "category": "onion",
+    "price_cents": 525,
+    "currency": "USD",
+    "description": "A pale yellow vidalia-style onion so mellow it might make you emotional. Sweet as can be.",
+    "short_tagline": "Very low latency, high sweetness",
+    "color": "pale yellow",
+    "flavor_profile": [
+      "sweet",
+      "mellow"
+    ],
+    "intensity": 2,
+    "gift_score": 3,
+    "weight_grams": 275,
+    "allergens": [],
+    "tags": [
+      "vidalia",
+      "sweet",
+      "mild"
+    ],
+    "image_url": "/images/onion_04.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_05",
+    "name": "Pickled Punks",
+    "category": "onion",
+    "price_cents": 799,
+    "currency": "USD",
+    "description": "Pink pickled onions with a tangy, vinegar-forward bite. Jar of rebellion for your cheese board.",
+    "short_tagline": "Punk rock in a jar",
+    "color": "pink",
+    "flavor_profile": [
+      "tangy",
+      "vinegar-forward"
+    ],
+    "intensity": 4,
+    "gift_score": 2,
+    "weight_grams": 350,
+    "allergens": [],
+    "tags": [
+      "pickled",
+      "preserved",
+      "snack"
+    ],
+    "image_url": "/images/onion_05.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_06",
+    "name": "Leeks of Legend",
+    "category": "onion",
+    "price_cents": 1200,
+    "currency": "USD",
+    "description": "Premium light green leeks with a grassy, subtle flavor. The stuff of soup legends.",
+    "short_tagline": "Large Leek Models, trained on massive sunsets",
+    "color": "light green",
+    "flavor_profile": [
+      "grassy",
+      "subtle"
+    ],
+    "intensity": 1,
+    "gift_score": 4,
+    "weight_grams": 400,
+    "allergens": [],
+    "tags": [
+      "leek",
+      "premium",
+      "soup"
+    ],
+    "image_url": "/images/onion_06.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_07",
+    "name": "Onion-In-Law",
+    "category": "onion",
+    "price_cents": 300,
+    "currency": "USD",
+    "description": "A bitter, sharp white onion. You didn't choose it, but it's here, and it's not leaving.",
+    "short_tagline": "Uninvited but unforgettable",
+    "color": "white",
+    "flavor_profile": [
+      "bitter",
+      "sharp"
+    ],
+    "intensity": 4,
+    "gift_score": 1,
+    "weight_grams": 220,
+    "allergens": [],
+    "tags": [
+      "white",
+      "cooking",
+      "basic"
+    ],
+    "image_url": "/images/onion_07.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_08",
+    "name": "Wall Street White",
+    "category": "onion",
+    "price_cents": 1500,
+    "currency": "USD",
+    "description": "A pearl white luxury onion that comes in its own gift box. Clean, refined, and worth every cent.",
+    "short_tagline": "The onion that wears a suit",
+    "color": "pearl white",
+    "flavor_profile": [
+      "clean",
+      "refined"
+    ],
+    "intensity": 2,
+    "gift_score": 5,
+    "weight_grams": 280,
+    "allergens": [],
+    "tags": [
+      "white",
+      "luxury",
+      "gift-box"
+    ],
+    "image_url": "/images/onion_08.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_09",
+    "name": "Cyber-Sizzlers",
+    "category": "onion",
+    "price_cents": 600,
+    "currency": "USD",
+    "description": "Neon red onions with a smoky, charred personality. Born to be grilled.",
+    "short_tagline": "Fire up the grill",
+    "color": "neon red",
+    "flavor_profile": [
+      "smoky",
+      "charred"
+    ],
+    "intensity": 4,
+    "gift_score": 2,
+    "weight_grams": 260,
+    "allergens": [],
+    "tags": [
+      "red",
+      "grilling",
+      "spicy"
+    ],
+    "image_url": "/images/onion_09.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_10",
+    "name": "The Root of All Evil",
+    "category": "onion",
+    "price_cents": 999,
+    "currency": "USD",
+    "description": "A dark purple heirloom onion with an earthy, complex flavor. For those who embrace the dark side.",
+    "short_tagline": "Embrace the dark side",
+    "color": "dark purple",
+    "flavor_profile": [
+      "earthy",
+      "complex"
+    ],
+    "intensity": 5,
+    "gift_score": 3,
+    "weight_grams": 310,
+    "allergens": [],
+    "tags": [
+      "purple",
+      "heirloom",
+      "bold"
+    ],
+    "image_url": "/images/onion_10.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_11",
+    "name": "Peel-Me-Maybe",
+    "category": "onion",
+    "price_cents": 400,
+    "currency": "USD",
+    "description": "A crisp, fresh light red onion. Perfect raw in salads -- this one wants to be peeled.",
+    "short_tagline": "Call me, peel me, maybe",
+    "color": "light red",
+    "flavor_profile": [
+      "crisp",
+      "fresh"
+    ],
+    "intensity": 3,
+    "gift_score": 2,
+    "weight_grams": 230,
+    "allergens": [],
+    "tags": [
+      "red",
+      "salad",
+      "raw"
+    ],
+    "image_url": "/images/onion_11.webp",
+    "in_stock": true
+  },
+  {
+    "sku": "onion_12",
+    "name": "Old Man's Grumble",
+    "category": "onion",
+    "price_cents": 250,
+    "currency": "USD",
+    "description": "A brown onion that's strong, tear-inducing, and doesn't care what you think. The classic.",
+    "short_tagline": "No nonsense, just onion",
+    "color": "brown",
+    "flavor_profile": [
+      "strong",
+      "tear-inducing"
+    ],
+    "intensity": 5,
+    "gift_score": 1,
+    "weight_grams": 240,
+    "allergens": [],
+    "tags": [
+      "brown",
+      "traditional",
+      "cheap"
+    ],
+    "image_url": "/images/onion_12.webp",
+    "in_stock": true
+  }
+];
+
+export default products;

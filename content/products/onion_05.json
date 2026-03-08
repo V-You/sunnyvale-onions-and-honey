@@ -1,0 +1,25 @@
+{
+  "sku": "onion_05",
+  "name": "Pickled Punks",
+  "category": "onion",
+  "price_cents": 799,
+  "currency": "USD",
+  "description": "Pink pickled onions with a tangy, vinegar-forward bite. Jar of rebellion for your cheese board.",
+  "short_tagline": "Punk rock in a jar",
+  "color": "pink",
+  "flavor_profile": [
+    "tangy",
+    "vinegar-forward"
+  ],
+  "intensity": 4,
+  "gift_score": 2,
+  "weight_grams": 350,
+  "allergens": [],
+  "tags": [
+    "pickled",
+    "preserved",
+    "snack"
+  ],
+  "image_url": "/images/onion_05.webp",
+  "in_stock": true
+}

@@ -27,6 +27,21 @@ export interface CartItem {
 }
 
 export type PSPName = "aci" | "stripe";
+export type PaymentFlowName = "card" | "saved_evervault" | "stripe_spt";
+export type ProcessorQueryLookupMode =
+  | "psp_transaction_id"
+  | "merchant_transaction_id";
+
+export interface PaymentMetricStep {
+  name: string;
+  duration_ms: number;
+}
+
+export interface PaymentMetrics {
+  total_duration_ms: number;
+  relay_round_trips: number;
+  steps: PaymentMetricStep[];
+}
 
 // checkout session (KV-stored)
 export interface CheckoutSession {
@@ -44,16 +59,39 @@ export interface CheckoutSession {
   result_code?: string;
   result_description?: string;
   completed_at?: number;
+  payment_metrics?: PaymentMetrics;
 }
 
 // payment method submitted by agent or checkout form
-export interface PaymentMethod {
+export interface CardPaymentMethod {
   type: "card";
   card_number: string;
   expiry_month: string;
   expiry_year: string;
   cvv: string;
+  card_holder?: string;
 }
+
+export interface SavedEvervaultPaymentMethod {
+  type: "saved_evervault";
+  saved_payment_id: string;
+  card_number: string;
+  expiry_month: string;
+  expiry_year: string;
+  cvv: string;
+  card_holder?: string;
+}
+
+export interface StripeSharedPaymentTokenMethod {
+  type: "stripe_spt";
+  payment_method_id?: string;
+  confirmation_token?: string;
+}
+
+export type PaymentMethod =
+  | CardPaymentMethod
+  | SavedEvervaultPaymentMethod
+  | StripeSharedPaymentTokenMethod;
 
 // PSP router result
 export interface PSPResult {
@@ -61,6 +99,8 @@ export interface PSPResult {
   order_id: string;
   psp_transaction_id: string;
   processor: PSPName;
+  payment_flow: PaymentFlowName;
+  payment_metrics?: PaymentMetrics;
   merchant_transaction_id?: string;
   result_code?: string;
   result_description?: string;
@@ -75,12 +115,34 @@ export interface RecentTransactionEntry {
   merchant_transaction_id?: string;
   psp_transaction_id?: string;
   processor: PSPName;
+  payment_flow?: PaymentFlowName;
+  payment_metrics?: PaymentMetrics;
   result_code?: string;
   result_description?: string;
   amount_total_cents: number;
   currency: string;
   items: CartItem[];
   recorded_at: number;
+}
+
+export interface SavedEvervaultPaymentRecord {
+  id: string;
+  created_at: number;
+  brand?: string | null;
+  last_four?: string | null;
+  cardholder_name?: string | null;
+  payment_method: SavedEvervaultPaymentMethod;
+}
+
+export interface DemoBenchmarkRun {
+  id: string;
+  created_at: number;
+  iterations: number;
+  processor_hint?: PSPName;
+  product_feed_average_ms: number;
+  product_feed_requests_per_second: number;
+  checkout_session_average_ms: number;
+  checkout_session_requests_per_second: number;
 }
 
 export interface ProcessorQueryResponse {
@@ -90,6 +152,9 @@ export interface ProcessorQueryResponse {
   merchant_transaction_id?: string;
   psp_transaction_id: string;
   queried_at: number;
+  lookup_mode: ProcessorQueryLookupMode;
+  match_count?: number;
+  matched_transaction_ids?: string[];
   status?: string;
   result_code?: string;
   result_description?: string;

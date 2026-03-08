@@ -2,12 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
-import type { CheckoutSession, PaymentMethod, Env } from "@/lib/types";
+import type {
+  CardPaymentMethod,
+  CheckoutSession,
+  PaymentMethod,
+  Env,
+  SavedEvervaultPaymentMethod,
+  StripeSharedPaymentTokenMethod,
+} from "@/lib/types";
 import { getSessionsKV, getEnv } from "@/lib/kv";
 
 export const runtime = "edge";
 
 const CHECKOUT_COMPLETE_METHODS = ["POST", "OPTIONS"] as const;
+
+function isEncryptedCardPaymentMethod(
+  paymentMethod: PaymentMethod,
+): paymentMethod is CardPaymentMethod | SavedEvervaultPaymentMethod {
+  return paymentMethod.type === "card" || paymentMethod.type === "saved_evervault";
+}
+
+function hasValidEncryptedCardData(
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
+) {
+  return (
+    typeof paymentMethod.card_number === "string" &&
+    typeof paymentMethod.expiry_month === "string" &&
+    typeof paymentMethod.expiry_year === "string" &&
+    typeof paymentMethod.cvv === "string" &&
+    paymentMethod.card_number.length > 0 &&
+    paymentMethod.expiry_month.length > 0 &&
+    paymentMethod.expiry_year.length > 0 &&
+    paymentMethod.cvv.length > 0
+  );
+}
+
+function hasValidDelegatedStripeToken(
+  paymentMethod: StripeSharedPaymentTokenMethod,
+) {
+  return Boolean(
+    paymentMethod.payment_method_id || paymentMethod.confirmation_token,
+  );
+}
 
 export async function OPTIONS(request: NextRequest) {
   const env = getEnv();
@@ -77,22 +113,50 @@ export async function POST(
   const body = (await request.json()) as { payment_method?: PaymentMethod };
   const pm = body.payment_method;
 
-  if (
-    !pm ||
-    pm.type !== "card" ||
-    typeof pm.card_number !== "string" ||
-    typeof pm.expiry_month !== "string" ||
-    typeof pm.expiry_year !== "string" ||
-    typeof pm.cvv !== "string" ||
-    !pm.card_number ||
-    !pm.expiry_month ||
-    !pm.expiry_year ||
-    !pm.cvv
-  ) {
+  if (!pm) {
     return corsJson(
       origin,
       env,
-      { error: "Valid payment_method with encrypted card data is required" },
+      { error: "payment_method is required" },
+      { status: 400 },
+      CHECKOUT_COMPLETE_METHODS,
+    );
+  }
+
+  if (isEncryptedCardPaymentMethod(pm) && !hasValidEncryptedCardData(pm)) {
+    return corsJson(
+      origin,
+      env,
+      {
+        error:
+          "Encrypted card payment methods require card_number, expiry_month, expiry_year, and cvv",
+      },
+      { status: 400 },
+      CHECKOUT_COMPLETE_METHODS,
+    );
+  }
+
+  if (pm.type === "stripe_spt" && !hasValidDelegatedStripeToken(pm)) {
+    return corsJson(
+      origin,
+      env,
+      {
+        error:
+          "Delegated Stripe payments require payment_method_id or confirmation_token",
+      },
+      { status: 400 },
+      CHECKOUT_COMPLETE_METHODS,
+    );
+  }
+
+  if (!isEncryptedCardPaymentMethod(pm) && pm.type !== "stripe_spt") {
+    return corsJson(
+      origin,
+      env,
+      {
+        error:
+          "Unsupported payment_method type. Use card, saved_evervault, or stripe_spt.",
+      },
       { status: 400 },
       CHECKOUT_COMPLETE_METHODS,
     );
@@ -110,6 +174,7 @@ export async function POST(
     session.result_code = result.result_code;
     session.result_description = result.result_description ?? result.error;
     session.completed_at = Date.now();
+    session.payment_metrics = result.payment_metrics;
 
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 
@@ -119,7 +184,12 @@ export async function POST(
       {
         status: session.status,
         order_id: result.order_id,
+        amount_total_cents: session.amount_total_cents,
+        currency: session.currency,
+        completed_at: session.completed_at,
         processor: result.processor,
+        payment_flow: result.payment_flow,
+        payment_metrics: result.payment_metrics,
         merchant_transaction_id: session.merchant_transaction_id,
         psp_transaction_id: result.psp_transaction_id,
         result_code: result.result_code,

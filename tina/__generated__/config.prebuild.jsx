@@ -1,23 +1,19 @@
+// tina/config.ts
 import { defineConfig } from "tinacms";
-
-export default defineConfig({
+var config_default = defineConfig({
   branch: process.env.TINA_BRANCH || "main",
-  clientId:
-    process.env.NEXT_PUBLIC_TINA_CLIENT_ID || process.env.TINA_CLIENT_ID || "",
+  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID || process.env.TINA_CLIENT_ID || "",
   token: process.env.TINA_TOKEN || "",
-
   build: {
     outputFolder: "admin",
-    publicFolder: "public",
+    publicFolder: "public"
   },
-
   media: {
     tina: {
       mediaRoot: "images",
-      publicFolder: "public",
-    },
+      publicFolder: "public"
+    }
   },
-
   schema: {
     collections: [
       {
@@ -32,25 +28,25 @@ export default defineConfig({
             name: "category",
             label: "Category",
             type: "string",
-            options: ["onion", "honey"],
+            options: ["onion", "honey"]
           },
           {
             name: "price_cents",
             label: "Price (cents)",
             type: "number",
-            required: true,
+            required: true
           },
           {
             name: "currency",
             label: "Currency",
             type: "string",
-            ui: { defaultValue: "USD" },
+            ui: { defaultValue: "USD" }
           },
           {
             name: "description",
             label: "Description",
             type: "string",
-            ui: { component: "textarea" },
+            ui: { component: "textarea" }
           },
           { name: "short_tagline", label: "Tagline", type: "string" },
           { name: "color", label: "Color", type: "string" },
@@ -58,13 +54,13 @@ export default defineConfig({
             name: "flavor_profile",
             label: "Flavor profile",
             type: "string",
-            list: true,
+            list: true
           },
           { name: "intensity", label: "Intensity (1-5)", type: "number" },
           {
             name: "gift_score",
             label: "Gift suitability (1-5)",
-            type: "number",
+            type: "number"
           },
           { name: "weight_grams", label: "Weight (g)", type: "number" },
           { name: "allergens", label: "Allergens", type: "string", list: true },
@@ -74,10 +70,13 @@ export default defineConfig({
             name: "in_stock",
             label: "In stock",
             type: "boolean",
-            ui: { defaultValue: true },
-          },
-        ],
-      },
-    ],
-  },
+            ui: { defaultValue: true }
+          }
+        ]
+      }
+    ]
+  }
 });
+export {
+  config_default as default
+};

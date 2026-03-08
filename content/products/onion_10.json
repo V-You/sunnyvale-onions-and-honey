@@ -1,0 +1,25 @@
+{
+  "sku": "onion_10",
+  "name": "The Root of All Evil",
+  "category": "onion",
+  "price_cents": 999,
+  "currency": "USD",
+  "description": "A dark purple heirloom onion with an earthy, complex flavor. For those who embrace the dark side.",
+  "short_tagline": "Embrace the dark side",
+  "color": "dark purple",
+  "flavor_profile": [
+    "earthy",
+    "complex"
+  ],
+  "intensity": 5,
+  "gift_score": 3,
+  "weight_grams": 310,
+  "allergens": [],
+  "tags": [
+    "purple",
+    "heirloom",
+    "bold"
+  ],
+  "image_url": "/images/onion_10.webp",
+  "in_stock": true
+}

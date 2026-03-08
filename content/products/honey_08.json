@@ -1,0 +1,25 @@
+{
+  "sku": "honey_08",
+  "name": "Sticky Situations",
+  "category": "honey",
+  "price_cents": 1100,
+  "currency": "USD",
+  "description": "Thick as molasses with a rich amber pour. Built for baking, glazing, and getting into sticky situations.",
+  "short_tagline": "Embrace the mess",
+  "color": "amber",
+  "flavor_profile": [
+    "thick",
+    "molasses"
+  ],
+  "intensity": 3,
+  "gift_score": 2,
+  "weight_grams": 400,
+  "allergens": [],
+  "tags": [
+    "thick",
+    "baking",
+    "cooking"
+  ],
+  "image_url": "/images/honey_08.webp",
+  "in_stock": true
+}

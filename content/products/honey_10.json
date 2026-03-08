@@ -1,0 +1,25 @@
+{
+  "sku": "honey_10",
+  "name": "Midnight Blossom",
+  "category": "honey",
+  "price_cents": 3000,
+  "currency": "USD",
+  "description": "A near-black buckwheat honey with an intense, complex taste. For the connoisseur who's seen everything.",
+  "short_tagline": "Darkness you can taste",
+  "color": "near-black",
+  "flavor_profile": [
+    "intense",
+    "buckwheat"
+  ],
+  "intensity": 5,
+  "gift_score": 4,
+  "weight_grams": 250,
+  "allergens": [],
+  "tags": [
+    "dark",
+    "rare",
+    "connoisseur"
+  ],
+  "image_url": "/images/honey_10.webp",
+  "in_stock": true
+}

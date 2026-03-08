@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import { loadTransactionHistory } from "@/lib/transaction-history";
 import type {
+  ProcessorQueryLookupMode,
   ProcessorQueryResponse,
   Product,
   RecentTransactionEntry,
@@ -24,6 +25,8 @@ export default function CartView({ products }: { products: Product[] }) {
   const [queryResult, setQueryResult] =
     useState<ProcessorQueryResponse | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
+  const [queryMode, setQueryMode] =
+    useState<ProcessorQueryLookupMode | null>(null);
   const [querying, setQuerying] = useState(false);
   const router = useRouter();
 
@@ -82,20 +85,19 @@ export default function CartView({ products }: { products: Product[] }) {
       .join(", ");
   }
 
-  async function openTransactionQuery(entry: RecentTransactionEntry) {
-    if (!entry.psp_transaction_id) {
-      return;
-    }
-
+  async function runTransactionQuery(
+    entry: RecentTransactionEntry,
+    lookupMode: ProcessorQueryLookupMode,
+    url: string,
+  ) {
     setSelectedTransaction(entry);
     setQueryResult(null);
     setQueryError(null);
+    setQueryMode(lookupMode);
     setQuerying(true);
 
     try {
-      const response = await fetch(
-        `/api/processor_transactions/${entry.processor}/${encodeURIComponent(entry.psp_transaction_id)}`,
-      );
+      const response = await fetch(url);
       const payload = (await response.json()) as ProcessorQueryResponse | { error?: string; message?: string };
 
       if (!response.ok) {
@@ -116,10 +118,35 @@ export default function CartView({ products }: { products: Product[] }) {
     }
   }
 
+  async function openProcessorTransactionQuery(entry: RecentTransactionEntry) {
+    if (!entry.psp_transaction_id) {
+      return;
+    }
+
+    await runTransactionQuery(
+      entry,
+      "psp_transaction_id",
+      `/api/processor_transactions/${entry.processor}/${encodeURIComponent(entry.psp_transaction_id)}`,
+    );
+  }
+
+  async function openMerchantTransactionQuery(entry: RecentTransactionEntry) {
+    if (!entry.merchant_transaction_id) {
+      return;
+    }
+
+    await runTransactionQuery(
+      entry,
+      "merchant_transaction_id",
+      `/api/processor_transactions/${entry.processor}/lookup?merchantTransactionId=${encodeURIComponent(entry.merchant_transaction_id)}`,
+    );
+  }
+
   function closeTransactionModal() {
     setSelectedTransaction(null);
     setQueryResult(null);
     setQueryError(null);
+    setQueryMode(null);
     setQuerying(false);
   }
 
@@ -180,6 +207,14 @@ export default function CartView({ products }: { products: Product[] }) {
                           <dt className="font-medium text-gray-500">Price</dt>
                           <dd>{formatCurrency(entry.amount_total_cents, entry.currency)}</dd>
                         </div>
+                        {entry.payment_flow && entry.payment_metrics && (
+                          <div>
+                            <dt className="font-medium text-gray-500">Flow timing</dt>
+                            <dd>
+                              {entry.payment_flow} · {entry.payment_metrics.total_duration_ms} ms
+                            </dd>
+                          </div>
+                        )}
                         <div>
                           <dt className="font-medium text-gray-500">Result code</dt>
                           <dd className="font-mono text-xs">
@@ -192,11 +227,19 @@ export default function CartView({ products }: { products: Product[] }) {
                     <div className="flex flex-col gap-2 md:w-44">
                       <button
                         type="button"
-                        onClick={() => openTransactionQuery(entry)}
-                        disabled={!entry.psp_transaction_id || querying}
+                        onClick={() => openMerchantTransactionQuery(entry)}
+                        disabled={!entry.merchant_transaction_id || querying}
                         className="rounded-lg bg-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-green-mid)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Query processor
+                        Query merchant ref
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openProcessorTransactionQuery(entry)}
+                        disabled={!entry.psp_transaction_id || querying}
+                        className="rounded-lg border border-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-[var(--color-green-dark)] transition-colors hover:bg-[var(--color-green-dark)]/5 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Query processor ID
                       </button>
                       {entry.result_description && (
                         <p className="text-xs text-gray-500">
@@ -224,6 +267,16 @@ export default function CartView({ products }: { products: Product[] }) {
                     <dt className="text-gray-500">Processor</dt>
                     <dd className="font-medium uppercase">{selectedTransaction.processor}</dd>
                   </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Current lookup mode</dt>
+                        <dd className="text-right capitalize">
+                          {queryMode === "merchant_transaction_id"
+                            ? "merchant transaction ID"
+                            : queryMode === "psp_transaction_id"
+                              ? "processor transaction ID"
+                              : "Not selected"}
+                        </dd>
+                      </div>
                   <div className="flex justify-between gap-4">
                     <dt className="text-gray-500">Processor transaction ID</dt>
                     <dd className="font-mono text-xs break-all text-right">
@@ -260,6 +313,20 @@ export default function CartView({ products }: { products: Product[] }) {
                         </dd>
                       </div>
                       <div className="flex justify-between gap-4">
+                        <dt className="text-gray-500">Lookup mode</dt>
+                        <dd className="text-right capitalize">
+                          {queryResult.lookup_mode === "merchant_transaction_id"
+                            ? "merchant transaction ID"
+                            : "processor transaction ID"}
+                        </dd>
+                      </div>
+                      {typeof queryResult.match_count === "number" && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-gray-500">Matches</dt>
+                          <dd className="text-right">{queryResult.match_count}</dd>
+                        </div>
+                      )}
+                      <div className="flex justify-between gap-4">
                         <dt className="text-gray-500">Result code</dt>
                         <dd className="font-mono text-xs text-right">
                           {queryResult.result_code ?? "Not provided"}
@@ -271,12 +338,35 @@ export default function CartView({ products }: { products: Product[] }) {
                           {queryResult.result_description ?? queryResult.message ?? "Not provided"}
                         </dd>
                       </div>
+                      {selectedTransaction.payment_metrics && (
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-gray-500">Checkout duration</dt>
+                          <dd className="text-right">
+                            {selectedTransaction.payment_metrics.total_duration_ms} ms
+                          </dd>
+                        </div>
+                      )}
                       <div className="flex justify-between gap-4">
                         <dt className="text-gray-500">Queried at</dt>
                         <dd className="text-right">{formatDate(queryResult.queried_at)}</dd>
                       </div>
                     </dl>
                   </div>
+
+                    {queryResult.matched_transaction_ids && queryResult.matched_transaction_ids.length > 0 && (
+                      <div className="rounded-xl border border-black/10 bg-white/70 p-4">
+                        <p className="mb-2 text-sm font-medium text-gray-500">
+                          Matched processor transaction IDs
+                        </p>
+                        <ul className="space-y-2 text-xs font-mono text-gray-700">
+                          {queryResult.matched_transaction_ids.map((transactionId) => (
+                            <li key={transactionId} className="break-all">
+                              {transactionId}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                   <div className="rounded-xl bg-slate-950 p-4 text-xs text-slate-100 overflow-x-auto">
                     <p className="mb-2 font-semibold">Raw processor response</p>

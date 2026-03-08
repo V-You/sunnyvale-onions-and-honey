@@ -1,8 +1,7 @@
 import type { Product } from "./types";
 
-// static catalog -- sourced from content/products/ at build time
-// in v1 we inline the catalog; TinaCMS integration can be added later
-import products from "@/content/products.json";
+// generated from Tina-managed content/products/*.json files
+import products from "@/content/products.generated";
 
 export function getAllProducts(): Product[] {
   return products as Product[];

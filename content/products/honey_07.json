@@ -1,0 +1,25 @@
+{
+  "sku": "honey_07",
+  "name": "Bees Knees",
+  "category": "honey",
+  "price_cents": 1800,
+  "currency": "USD",
+  "description": "A warm amber classic with a buttery finish. Truly the bee's knees -- as versatile as honey gets.",
+  "short_tagline": "The actual bee's knees",
+  "color": "warm amber",
+  "flavor_profile": [
+    "classic",
+    "buttery"
+  ],
+  "intensity": 3,
+  "gift_score": 4,
+  "weight_grams": 300,
+  "allergens": [],
+  "tags": [
+    "classic",
+    "versatile",
+    "bee-themed"
+  ],
+  "image_url": "/images/honey_07.webp",
+  "in_stock": true
+}

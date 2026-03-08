@@ -1,0 +1,25 @@
+{
+  "sku": "onion_08",
+  "name": "Wall Street White",
+  "category": "onion",
+  "price_cents": 1500,
+  "currency": "USD",
+  "description": "A pearl white luxury onion that comes in its own gift box. Clean, refined, and worth every cent.",
+  "short_tagline": "The onion that wears a suit",
+  "color": "pearl white",
+  "flavor_profile": [
+    "clean",
+    "refined"
+  ],
+  "intensity": 2,
+  "gift_score": 5,
+  "weight_grams": 280,
+  "allergens": [],
+  "tags": [
+    "white",
+    "luxury",
+    "gift-box"
+  ],
+  "image_url": "/images/onion_08.webp",
+  "in_stock": true
+}

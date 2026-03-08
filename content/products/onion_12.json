@@ -1,0 +1,25 @@
+{
+  "sku": "onion_12",
+  "name": "Old Man's Grumble",
+  "category": "onion",
+  "price_cents": 250,
+  "currency": "USD",
+  "description": "A brown onion that's strong, tear-inducing, and doesn't care what you think. The classic.",
+  "short_tagline": "No nonsense, just onion",
+  "color": "brown",
+  "flavor_profile": [
+    "strong",
+    "tear-inducing"
+  ],
+  "intensity": 5,
+  "gift_score": 1,
+  "weight_grams": 240,
+  "allergens": [],
+  "tags": [
+    "brown",
+    "traditional",
+    "cheap"
+  ],
+  "image_url": "/images/onion_12.webp",
+  "in_stock": true
+}

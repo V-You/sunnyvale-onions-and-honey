@@ -1,0 +1,19 @@
+fragment ProductParts on Product {
+  __typename
+  sku
+  name
+  category
+  price_cents
+  currency
+  description
+  short_tagline
+  color
+  flavor_profile
+  intensity
+  gift_score
+  weight_grams
+  allergens
+  tags
+  image_url
+  in_stock
+}

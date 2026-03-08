@@ -1,0 +1,25 @@
+{
+  "sku": "honey_04",
+  "name": "The Hive's Secret",
+  "category": "honey",
+  "price_cents": 4500,
+  "currency": "USD",
+  "description": "A deep gold honey with complex truffle undertones. Extremely limited -- the bees won't tell us how they do it.",
+  "short_tagline": "They'll never tell. Zero-Trust.",
+  "color": "deep gold",
+  "flavor_profile": [
+    "complex",
+    "truffle"
+  ],
+  "intensity": 5,
+  "gift_score": 5,
+  "weight_grams": 200,
+  "allergens": [],
+  "tags": [
+    "rare",
+    "luxury",
+    "limited-edition"
+  ],
+  "image_url": "/images/honey_04.webp",
+  "in_stock": true
+}

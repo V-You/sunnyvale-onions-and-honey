@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "catalog:generate": "node scripts/sync-products.mjs",
+    "admin:build": "npm run catalog:generate && npx @tinacms/cli build --local --datalayer-port 9010 --skip-cloud-checks",
+    "dev": "npm run catalog:generate && next dev",
+    "build": "npm run catalog:generate && npm run admin:build && next build",
+    "start": "npm run catalog:generate && next start",
     "lint": "next lint",
-    "pages:build": "npx @cloudflare/next-on-pages@1"
+    "pages:build": "npm run build && npx @cloudflare/next-on-pages@1"
   },
   "dependencies": {
     "@evervault/react": "^2.0.0",
@@ -20,6 +22,7 @@
     "@cloudflare/next-on-pages": "^1.13.16",
     "@cloudflare/workers-types": "^4.20260101.0",
     "@tailwindcss/postcss": "^4.0.0",
+    "@tinacms/cli": "^2.1.9",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

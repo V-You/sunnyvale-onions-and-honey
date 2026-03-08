@@ -1,0 +1,25 @@
+{
+  "sku": "onion_06",
+  "name": "Leeks of Legend",
+  "category": "onion",
+  "price_cents": 1200,
+  "currency": "USD",
+  "description": "Premium light green leeks with a grassy, subtle flavor. The stuff of soup legends.",
+  "short_tagline": "Large Leek Models, trained on massive sunsets",
+  "color": "light green",
+  "flavor_profile": [
+    "grassy",
+    "subtle"
+  ],
+  "intensity": 1,
+  "gift_score": 4,
+  "weight_grams": 400,
+  "allergens": [],
+  "tags": [
+    "leek",
+    "premium",
+    "soup"
+  ],
+  "image_url": "/images/onion_06.webp",
+  "in_stock": true
+}

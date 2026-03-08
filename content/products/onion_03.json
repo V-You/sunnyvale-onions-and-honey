@@ -1,0 +1,25 @@
+{
+  "sku": "onion_03",
+  "name": "Sunnyvale Gold",
+  "category": "onion",
+  "price_cents": 800,
+  "currency": "USD",
+  "description": "Our signature golden yellow onion. Sweet and caramelized straight from the earth -- the one that started it all.",
+  "short_tagline": "The original Sunnyvale signature",
+  "color": "golden yellow",
+  "flavor_profile": [
+    "sweet",
+    "caramelized"
+  ],
+  "intensity": 3,
+  "gift_score": 4,
+  "weight_grams": 300,
+  "allergens": [],
+  "tags": [
+    "yellow",
+    "sweet",
+    "signature"
+  ],
+  "image_url": "/images/onion_03.webp",
+  "in_stock": true
+}

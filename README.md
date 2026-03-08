@@ -8,14 +8,20 @@
 - Evervault relay-based payment routing patterns
 - Cloudflare Pages deployment using `@cloudflare/next-on-pages`
 
-## Implemention summary
+## implementation summary
 
-- Next.js app with App Router pages: `/`, `/products`, `/products/[sku]`, `/cart`, `/checkout`, `/confirmation`
-- Product catalog with 24 items (12 onions, 12 honey)
+- Next.js app with App Router pages: `/`, `/products`, `/products/[sku]`, `/cart`, `/checkout`, `/confirmation`, `/metrics`, `/admin`
+- Product catalog with 24 items in Tina-managed `content/products/*.json`
+- Generated shared catalog module at `src/content/products.generated.ts`
 - JSON-LD product metadata on product detail pages
 - ACP manifest at `/.well-known/acp.json`
 - API endpoints: `GET /api/products`, `POST /api/checkout_sessions`, `GET /api/checkout_sessions/:id`, `PATCH /api/checkout_sessions/:id`, `POST /api/checkout_sessions/:id/complete`
 - PSP router for ACI and Stripe, controlled by `ACTIVE_PSP`
+- Delegated Stripe token path via confirmation token or PaymentMethod ID when Stripe is active
+- Saved Evervault-encrypted payment payload reuse on the checkout page
+- Filterable product explorer and cart-side processor query history
+- Metrics dashboard with real checkout timings plus repeatable product/session probe runs
+- Tina static admin build served through `/admin`
 - Cloudflare KV session flow with local in-memory fallback for development
 - `Idempotency-Key` required for checkout completion calls
 
@@ -33,7 +39,7 @@
 - Deployment target: Cloudflare Pages with `@cloudflare/next-on-pages`
 - Infra tooling: Cloudflare Pages Git integration
 - Security integration surface: Evervault (relay pattern)
-- CMS direction: TinaCMS config is present
+- CMS: Tina-managed local content plus generated static admin assets
 
 ## Quick start
 
@@ -55,6 +61,12 @@ npm run build
 npm run start
 ```
 
+Build or refresh the Tina admin assets only:
+
+```bash
+npm run admin:build
+```
+
 Cloudflare Pages local validation:
 
 ```bash
@@ -74,6 +86,7 @@ Use the provided env template and set real values for:
 - ACI_ENTITY_ID
 - ACI_TOKEN
 - STRIPE_SECRET_KEY
+- NEXT_PUBLIC_TINA_CLIENT_ID
 - ALLOWED_ORIGINS
 
 Cloudflare notes:
@@ -98,8 +111,10 @@ curl -s http://localhost:3000/.well-known/acp.json
 
 ## Notes
 
-- Checkout form uses Evervault UI Components for browser-side card encryption.
+- Checkout form supports new encrypted card entry, saved Evervault payload reuse, and delegated Stripe tokens.
 - Configure `NEXT_PUBLIC_EVERVAULT_TEAM_ID` and `NEXT_PUBLIC_EVERVAULT_APP_ID`.
+- Tina content lives in `content/products/*.json`, and `npm run catalog:generate` refreshes the generated catalog module used by the storefront and ACP feed.
+- `/metrics` provides a lightweight demo instrumentation dashboard for checkout timings and API probe throughput.
 - Future: move PSP calls into Evervault Enclave, to remove PSP secrets from the Pages edge runtime.
 - Current order response uses PSP IDs. Future: separate merchant order model, see below.
 - Checkout session persistence uses KV. Future hardening: see below.

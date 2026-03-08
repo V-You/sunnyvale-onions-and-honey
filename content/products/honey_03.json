@@ -1,0 +1,25 @@
+{
+  "sku": "honey_03",
+  "name": "Space Dust Honey",
+  "category": "honey",
+  "price_cents": 2200,
+  "currency": "USD",
+  "description": "Infused with holographic edible glitter. A sparkly, citrus honey that is out of this world.",
+  "short_tagline": "Literally out of this world",
+  "color": "iridescent gold",
+  "flavor_profile": [
+    "sparkly",
+    "citrus"
+  ],
+  "intensity": 3,
+  "gift_score": 5,
+  "weight_grams": 280,
+  "allergens": [],
+  "tags": [
+    "glitter",
+    "novelty",
+    "gift-box"
+  ],
+  "image_url": "/images/honey_03.webp",
+  "in_stock": true
+}

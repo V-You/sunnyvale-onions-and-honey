@@ -1,0 +1,25 @@
+{
+  "sku": "onion_09",
+  "name": "Cyber-Sizzlers",
+  "category": "onion",
+  "price_cents": 600,
+  "currency": "USD",
+  "description": "Neon red onions with a smoky, charred personality. Born to be grilled.",
+  "short_tagline": "Fire up the grill",
+  "color": "neon red",
+  "flavor_profile": [
+    "smoky",
+    "charred"
+  ],
+  "intensity": 4,
+  "gift_score": 2,
+  "weight_grams": 260,
+  "allergens": [],
+  "tags": [
+    "red",
+    "grilling",
+    "spicy"
+  ],
+  "image_url": "/images/onion_09.webp",
+  "in_stock": true
+}

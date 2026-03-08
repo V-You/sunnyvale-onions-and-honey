@@ -1,7 +1,10 @@
 import type {
+  CardPaymentMethod,
   CheckoutSession,
   PaymentMethod,
   PSPResult,
+  SavedEvervaultPaymentMethod,
+  StripeSharedPaymentTokenMethod,
   Env,
 } from "./types";
 
@@ -39,7 +42,6 @@ function getErrorMessage(body: unknown, fallback: string): string {
   if (typeof body === "string" && body.trim()) {
     return body;
   }
-
   if (body && typeof body === "object") {
     const maybeError = body as {
       error?: { message?: string };
@@ -65,6 +67,38 @@ function getErrorMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+function isEncryptedCardPaymentMethod(
+  paymentMethod: PaymentMethod,
+): paymentMethod is CardPaymentMethod | SavedEvervaultPaymentMethod {
+  return paymentMethod.type === "card" || paymentMethod.type === "saved_evervault";
+}
+
+function getEncryptedCardData(
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
+) {
+  return {
+    card_number: paymentMethod.card_number,
+    expiry_month: paymentMethod.expiry_month,
+    expiry_year: paymentMethod.expiry_year,
+    cvv: paymentMethod.cvv,
+    card_holder: paymentMethod.card_holder,
+  };
+}
+
+function createPaymentMetrics(
+  startedAt: number,
+  steps: Array<{ name: string; started_at: number; ended_at: number }>,
+) {
+  return {
+    total_duration_ms: Date.now() - startedAt,
+    relay_round_trips: steps.length,
+    steps: steps.map((step) => ({
+      name: step.name,
+      duration_ms: step.ended_at - step.started_at,
+    })),
+  };
+}
+
 export async function routeToPSP(
   env: Env,
   session: CheckoutSession,
@@ -73,17 +107,38 @@ export async function routeToPSP(
   const psp = env.ACTIVE_PSP || "aci";
 
   if (psp === "stripe") {
-    return routeToStripe(env, session, paymentMethod);
+    if (paymentMethod.type === "stripe_spt") {
+      return routeToStripeDelegated(env, session, paymentMethod);
+    }
+    if (isEncryptedCardPaymentMethod(paymentMethod)) {
+      return routeToStripe(env, session, paymentMethod);
+    }
   }
+
+  if (paymentMethod.type === "stripe_spt") {
+    return {
+      success: false,
+      order_id: "",
+      psp_transaction_id: "",
+      processor: psp === "stripe" ? "stripe" : "aci",
+      payment_flow: "stripe_spt",
+      merchant_transaction_id: session.merchant_transaction_id ?? session.id,
+      error:
+        "Delegated Stripe tokens can only be processed when ACTIVE_PSP=stripe",
+    };
+  }
+
   return routeToACI(env, session, paymentMethod);
 }
 
 async function routeToACI(
   env: Env,
   session: CheckoutSession,
-  pm: PaymentMethod,
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
 ): Promise<PSPResult> {
+  const startedAt = Date.now();
   const merchantTransactionId = session.merchant_transaction_id ?? session.id;
+  const pm = getEncryptedCardData(paymentMethod);
   const params = new URLSearchParams();
   params.append("entityId", env.ACI_ENTITY_ID);
   params.append("amount", (session.amount_total_cents / 100).toFixed(2));
@@ -94,8 +149,12 @@ async function routeToACI(
   params.append("card.expiryMonth", pm.expiry_month);
   params.append("card.expiryYear", pm.expiry_year);
   params.append("card.cvv", pm.cvv);
+  if (pm.card_holder) {
+    params.append("card.holder", pm.card_holder);
+  }
 
   let response: Response;
+  let requestStartedAt = Date.now();
 
   try {
     response = await fetch(`https://${env.ACI_RELAY_DOMAIN}/v1/payments`, {
@@ -112,6 +171,14 @@ async function routeToACI(
       order_id: "",
       psp_transaction_id: "",
       processor: "aci",
+      payment_flow: paymentMethod.type,
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "aci_payment",
+          started_at: requestStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
       merchant_transaction_id: merchantTransactionId,
       error:
         error instanceof Error
@@ -133,6 +200,14 @@ async function routeToACI(
     order_id: paymentId,
     psp_transaction_id: paymentId,
     processor: "aci",
+    payment_flow: paymentMethod.type,
+    payment_metrics: createPaymentMetrics(startedAt, [
+      {
+        name: "aci_payment",
+        started_at: requestStartedAt,
+        ended_at: Date.now(),
+      },
+    ]),
     merchant_transaction_id: merchantTransactionId,
     result_code: resultCode,
     result_description: resultDescription,
@@ -150,10 +225,12 @@ async function routeToACI(
 async function routeToStripe(
   env: Env,
   session: CheckoutSession,
-  pm: PaymentMethod,
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
 ): Promise<PSPResult> {
+  const startedAt = Date.now();
   const authHeader = `Basic ${btoa(env.STRIPE_SECRET_KEY + ":")}`;
   const merchantTransactionId = session.merchant_transaction_id ?? session.id;
+  const pm = getEncryptedCardData(paymentMethod);
 
   // step 1: create a PaymentMethod with encrypted card data
   const pmParams = new URLSearchParams();
@@ -162,8 +239,12 @@ async function routeToStripe(
   pmParams.append("card[exp_month]", pm.expiry_month);
   pmParams.append("card[exp_year]", pm.expiry_year);
   pmParams.append("card[cvc]", pm.cvv);
+  if (pm.card_holder) {
+    pmParams.append("billing_details[name]", pm.card_holder);
+  }
 
   let paymentMethodResponse: Response;
+  let paymentMethodStartedAt = Date.now();
 
   try {
     paymentMethodResponse = await fetch(
@@ -183,6 +264,14 @@ async function routeToStripe(
       order_id: "",
       psp_transaction_id: "",
       processor: "stripe",
+      payment_flow: paymentMethod.type,
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "stripe_payment_method",
+          started_at: paymentMethodStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
       merchant_transaction_id: merchantTransactionId,
       error:
         error instanceof Error
@@ -200,6 +289,14 @@ async function routeToStripe(
       order_id: "",
       psp_transaction_id: "",
       processor: "stripe",
+      payment_flow: paymentMethod.type,
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "stripe_payment_method",
+          started_at: paymentMethodStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
       merchant_transaction_id: merchantTransactionId,
       response_body: paymentMethodParsed.body,
       error: getErrorMessage(
@@ -218,6 +315,7 @@ async function routeToStripe(
   piParams.append("metadata[merchantTransactionId]", merchantTransactionId);
 
   let paymentIntentResponse: Response;
+  let paymentIntentStartedAt = Date.now();
 
   try {
     paymentIntentResponse = await fetch(
@@ -237,6 +335,19 @@ async function routeToStripe(
       order_id: "",
       psp_transaction_id: "",
       processor: "stripe",
+      payment_flow: paymentMethod.type,
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "stripe_payment_method",
+          started_at: paymentMethodStartedAt,
+          ended_at: paymentIntentStartedAt,
+        },
+        {
+          name: "stripe_payment_intent",
+          started_at: paymentIntentStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
       merchant_transaction_id: merchantTransactionId,
       error:
         error instanceof Error
@@ -258,6 +369,19 @@ async function routeToStripe(
     order_id: paymentIntentId,
     psp_transaction_id: paymentIntentId,
     processor: "stripe",
+    payment_flow: paymentMethod.type,
+    payment_metrics: createPaymentMetrics(startedAt, [
+      {
+        name: "stripe_payment_method",
+        started_at: paymentMethodStartedAt,
+        ended_at: paymentIntentStartedAt,
+      },
+      {
+        name: "stripe_payment_intent",
+        started_at: paymentIntentStartedAt,
+        ended_at: Date.now(),
+      },
+    ]),
     merchant_transaction_id: merchantTransactionId,
     result_code: typeof piData?.status === "string" ? piData.status : undefined,
     result_description:
@@ -270,6 +394,113 @@ async function routeToStripe(
         getErrorMessage(
           paymentIntentParsed.body,
           `Stripe payment intent failed with HTTP ${paymentIntentResponse.status}`,
+        ),
+  };
+}
+
+async function routeToStripeDelegated(
+  env: Env,
+  session: CheckoutSession,
+  paymentMethod: StripeSharedPaymentTokenMethod,
+): Promise<PSPResult> {
+  const startedAt = Date.now();
+  const authHeader = `Basic ${btoa(env.STRIPE_SECRET_KEY + ":")}`;
+  const merchantTransactionId = session.merchant_transaction_id ?? session.id;
+  const params = new URLSearchParams();
+
+  params.append("amount", String(session.amount_total_cents));
+  params.append("currency", session.currency.toLowerCase());
+  params.append("confirm", "true");
+  params.append("metadata[merchantTransactionId]", merchantTransactionId);
+
+  if (paymentMethod.confirmation_token) {
+    params.append("confirmation_token", paymentMethod.confirmation_token);
+    params.append("automatic_payment_methods[enabled]", "true");
+  } else if (paymentMethod.payment_method_id) {
+    params.append("payment_method", paymentMethod.payment_method_id);
+  } else {
+    return {
+      success: false,
+      order_id: "",
+      psp_transaction_id: "",
+      processor: "stripe",
+      payment_flow: "stripe_spt",
+      merchant_transaction_id: merchantTransactionId,
+      error:
+        "A delegated Stripe payment requires either payment_method_id or confirmation_token",
+    };
+  }
+
+  let paymentIntentResponse: Response;
+  let paymentIntentStartedAt = Date.now();
+
+  try {
+    paymentIntentResponse = await fetch(
+      `https://${env.STRIPE_RELAY_DOMAIN}/v1/payment_intents`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: authHeader,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(),
+      },
+    );
+  } catch (error) {
+    return {
+      success: false,
+      order_id: "",
+      psp_transaction_id: "",
+      processor: "stripe",
+      payment_flow: "stripe_spt",
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "stripe_delegated_payment_intent",
+          started_at: paymentIntentStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
+      merchant_transaction_id: merchantTransactionId,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Stripe delegated payment request failed before a response was received",
+    };
+  }
+
+  const paymentIntentParsed = await readGatewayResponse(paymentIntentResponse);
+  const piData = paymentIntentParsed.json;
+  const success =
+    paymentIntentResponse.ok && piData?.status === "succeeded";
+  const piError = piData?.last_payment_error as { message?: string } | undefined;
+  const topError = piData?.error as { message?: string } | undefined;
+  const paymentIntentId = typeof piData?.id === "string" ? piData.id : "";
+
+  return {
+    success,
+    order_id: paymentIntentId,
+    psp_transaction_id: paymentIntentId,
+    processor: "stripe",
+    payment_flow: "stripe_spt",
+    payment_metrics: createPaymentMetrics(startedAt, [
+      {
+        name: "stripe_delegated_payment_intent",
+        started_at: paymentIntentStartedAt,
+        ended_at: Date.now(),
+      },
+    ]),
+    merchant_transaction_id: merchantTransactionId,
+    result_code: typeof piData?.status === "string" ? piData.status : undefined,
+    result_description:
+      piError?.message ?? topError?.message ?? undefined,
+    response_body: paymentIntentParsed.body,
+    error: success
+      ? undefined
+      : piError?.message ??
+        topError?.message ??
+        getErrorMessage(
+          paymentIntentParsed.body,
+          `Stripe delegated payment failed with HTTP ${paymentIntentResponse.status}`,
         ),
   };
 }

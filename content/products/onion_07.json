@@ -1,0 +1,25 @@
+{
+  "sku": "onion_07",
+  "name": "Onion-In-Law",
+  "category": "onion",
+  "price_cents": 300,
+  "currency": "USD",
+  "description": "A bitter, sharp white onion. You didn't choose it, but it's here, and it's not leaving.",
+  "short_tagline": "Uninvited but unforgettable",
+  "color": "white",
+  "flavor_profile": [
+    "bitter",
+    "sharp"
+  ],
+  "intensity": 4,
+  "gift_score": 1,
+  "weight_grams": 220,
+  "allergens": [],
+  "tags": [
+    "white",
+    "cooking",
+    "basic"
+  ],
+  "image_url": "/images/onion_07.webp",
+  "in_stock": true
+}

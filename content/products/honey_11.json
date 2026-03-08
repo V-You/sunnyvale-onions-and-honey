@@ -1,0 +1,25 @@
+{
+  "sku": "honey_11",
+  "name": "Waggle Dance",
+  "category": "honey",
+  "price_cents": 1500,
+  "currency": "USD",
+  "description": "A medium gold honey with a fruity, bright personality. Fun, cheerful, and gift-box ready.",
+  "short_tagline": "Shake what the bees gave you",
+  "color": "medium gold",
+  "flavor_profile": [
+    "fruity",
+    "bright"
+  ],
+  "intensity": 2,
+  "gift_score": 4,
+  "weight_grams": 300,
+  "allergens": [],
+  "tags": [
+    "fun",
+    "fruity",
+    "gift-box"
+  ],
+  "image_url": "/images/honey_11.webp",
+  "in_stock": true
+}

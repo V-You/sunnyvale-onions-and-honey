@@ -1,0 +1,25 @@
+{
+  "sku": "honey_12",
+  "name": "Bumble-Blackout",
+  "category": "honey",
+  "price_cents": 1400,
+  "currency": "USD",
+  "description": "A dark brown honey with a malty, rich depth. Bold enough to stand up to strong cheese and dark bread.",
+  "short_tagline": "Bold move in a jar",
+  "color": "dark brown",
+  "flavor_profile": [
+    "malty",
+    "rich"
+  ],
+  "intensity": 4,
+  "gift_score": 3,
+  "weight_grams": 340,
+  "allergens": [],
+  "tags": [
+    "dark",
+    "strong",
+    "bold"
+  ],
+  "image_url": "/images/honey_12.webp",
+  "in_stock": true
+}
