@@ -16,8 +16,12 @@ body {
   color: var(--color-green-dark);
 }
 
+div.header nav a.text-xl {display:none}
+
 #hero {
   background-image: url("/logo.png");
   background-repeat: no-repeat;
-  background-position: left top;
+  background-position: 3% 0;
 }
+
+#hero h1 {color:white}

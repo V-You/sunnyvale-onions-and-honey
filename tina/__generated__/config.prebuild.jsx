@@ -37,6 +37,18 @@ var config_default = defineConfig({
             required: true
           },
           {
+            name: "on_sale",
+            label: "On sale",
+            type: "boolean",
+            ui: { defaultValue: false }
+          },
+          {
+            name: "sale_percent_off",
+            label: "Sale percent off",
+            type: "number",
+            ui: { defaultValue: 0 }
+          },
+          {
             name: "currency",
             label: "Currency",
             type: "string",

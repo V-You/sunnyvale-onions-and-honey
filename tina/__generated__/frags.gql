@@ -4,6 +4,8 @@ fragment ProductParts on Product {
   name
   category
   price_cents
+  on_sale
+  sale_percent_off
   currency
   description
   short_tagline

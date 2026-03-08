@@ -125,9 +125,9 @@ export default function ProductExplorer({ products }: { products: Product[] }) {
             <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-brown-light)]">
               SUNNYVALE ONIONS &amp; HONEY SHOP
             </p>
-            <h1 className="text-4xl font-bold tracking-tight">HA produce shop</h1>
+            <h1 className="text-4xl font-bold tracking-tight">Sunnyvale&rsquo;s HA produce shop</h1>
             <p className="text-[var(--color-brown)]">
-              Low latency shipping. All products are shipped in a single, lightweight, and portable "container".
+              Low latency shipping. All products come in a single, lightweight, and portable container.
             </p>
           </div>
 

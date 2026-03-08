@@ -8,6 +8,9 @@ export default function Header() {
           Sunnyvale Onions &amp; Honey
         </Link>
         <div className="flex gap-6 text-sm font-medium">
+          <Link href="/" className="hover:text-[var(--color-amber)] transition-colors">
+            Home
+          </Link>
           <Link href="/products" className="hover:text-[var(--color-amber)] transition-colors">
             Shop
           </Link>
