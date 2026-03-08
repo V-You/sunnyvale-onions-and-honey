@@ -35,6 +35,13 @@ export interface CheckoutSession {
   currency: string;
   allowed_payment_methods: string[];
   created_at: number;
+  order_id?: string;
+  merchant_transaction_id?: string;
+  psp_transaction_id?: string;
+  processor?: "aci" | "stripe";
+  result_code?: string;
+  result_description?: string;
+  completed_at?: number;
 }
 
 // payment method submitted by agent or checkout form
@@ -51,6 +58,11 @@ export interface PSPResult {
   success: boolean;
   order_id: string;
   psp_transaction_id: string;
+  processor: "aci" | "stripe";
+  merchant_transaction_id?: string;
+  result_code?: string;
+  result_description?: string;
+  response_body?: unknown;
   error?: string;
 }
 

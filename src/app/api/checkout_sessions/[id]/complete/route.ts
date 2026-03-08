@@ -64,17 +64,45 @@ export async function POST(
     );
   }
 
-  const result = await routeToPSP(env as Env, session, pm);
+  try {
+    const result = await routeToPSP(env as Env, session, pm);
 
-  session.status = result.success ? "completed" : "failed";
-  await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
+    session.status = result.success ? "completed" : "failed";
+    session.order_id = result.order_id || undefined;
+    session.processor = result.processor;
+    session.merchant_transaction_id =
+      result.merchant_transaction_id ?? session.id;
+    session.psp_transaction_id = result.psp_transaction_id || undefined;
+    session.result_code = result.result_code;
+    session.result_description = result.result_description ?? result.error;
+    session.completed_at = Date.now();
 
-  return NextResponse.json({
-    status: session.status,
-    order_id: result.order_id,
-    psp_transaction_id: result.psp_transaction_id,
-    message: result.success
-      ? "The onions are on their way!"
-      : result.error,
-  });
+    await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
+
+    return NextResponse.json({
+      status: session.status,
+      order_id: result.order_id,
+      processor: result.processor,
+      merchant_transaction_id: session.merchant_transaction_id,
+      psp_transaction_id: result.psp_transaction_id,
+      result_code: result.result_code,
+      result_description: result.result_description,
+      response_body: result.response_body,
+      message: result.success
+        ? "The onions are on their way!"
+        : result.error ?? result.result_description,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        status: "failed",
+        error: "Payment processing failed",
+        technical_message:
+          error instanceof Error
+            ? error.message
+            : "Unknown payment processing error",
+      },
+      { status: 502 },
+    );
+  }
 }

@@ -28,7 +28,67 @@ interface SessionCreateResponse {
 interface CheckoutCompleteResponse {
   status?: string;
   order_id?: string;
+  processor?: string;
+  merchant_transaction_id?: string;
+  psp_transaction_id?: string;
+  result_code?: string;
+  result_description?: string;
+  response_body?: unknown;
   message?: string;
+  error?: string;
+  technical_message?: string;
+}
+
+function formatTechnicalResponse(payload: unknown): string {
+  if (typeof payload === "string") {
+    return payload;
+  }
+
+  return JSON.stringify(payload, null, 2);
+}
+
+async function readApiResponse(response: Response): Promise<unknown> {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+}
+
+function getResponseMessage(payload: unknown, fallback: string): string {
+  if (typeof payload === "string" && payload.trim()) {
+    return payload;
+  }
+
+  if (payload && typeof payload === "object") {
+    const maybePayload = payload as {
+      error?: string;
+      message?: string;
+      technical_message?: string;
+      result_description?: string;
+    };
+
+    if (maybePayload.error) {
+      return maybePayload.error;
+    }
+    if (maybePayload.message) {
+      return maybePayload.message;
+    }
+    if (maybePayload.technical_message) {
+      return maybePayload.technical_message;
+    }
+    if (maybePayload.result_description) {
+      return maybePayload.result_description;
+    }
+  }
+
+  return fallback;
 }
 
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
@@ -40,6 +100,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [technicalResponse, setTechnicalResponse] = useState<unknown>(null);
   const [cardComplete, setCardComplete] = useState(false);
   const [encryptedCard, setEncryptedCard] =
     useState<EncryptedCardDetails | null>(null);
@@ -87,6 +148,7 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setTechnicalResponse(null);
 
     try {
       // step 1: create checkout session
@@ -96,12 +158,18 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
         body: JSON.stringify({ items: cart }),
       });
 
+      const sessionPayload = await readApiResponse(sessionResp);
+
       if (!sessionResp.ok) {
-        const data = (await sessionResp.json()) as SessionErrorResponse;
+        const data = sessionPayload as SessionErrorResponse;
         throw new Error(data.error ?? "Failed to create session");
       }
 
-      const session = (await sessionResp.json()) as SessionCreateResponse;
+      const session = sessionPayload as SessionCreateResponse;
+
+      if (!session.id) {
+        throw new Error("Checkout session was created without an id");
+      }
 
       if (!EVERVAULT_CONFIGURED) {
         throw new Error(
@@ -136,17 +204,58 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
         },
       );
 
-      const result = (await completeResp.json()) as CheckoutCompleteResponse;
+      const resultPayload = await readApiResponse(completeResp);
+      setTechnicalResponse(resultPayload);
+
+      if (!completeResp.ok) {
+        throw new Error(
+          getResponseMessage(
+            resultPayload,
+            `Checkout request failed with HTTP ${completeResp.status}`,
+          ),
+        );
+      }
+
+      const result = resultPayload as CheckoutCompleteResponse;
 
       if (result.status === "completed" && result.order_id) {
         localStorage.removeItem("cart");
-        router.push(
-          `/confirmation?order_id=${encodeURIComponent(result.order_id)}`,
-        );
+        const confirmationParams = new URLSearchParams({
+          order_id: result.order_id,
+        });
+
+        if (result.processor) {
+          confirmationParams.set("processor", result.processor);
+        }
+        if (result.merchant_transaction_id) {
+          confirmationParams.set(
+            "merchant_transaction_id",
+            result.merchant_transaction_id,
+          );
+        }
+        if (result.psp_transaction_id) {
+          confirmationParams.set(
+            "psp_transaction_id",
+            result.psp_transaction_id,
+          );
+        }
+        if (result.result_code) {
+          confirmationParams.set("result_code", result.result_code);
+        }
+        if (result.result_description) {
+          confirmationParams.set(
+            "result_description",
+            result.result_description,
+          );
+        }
+
+        router.push(`/confirmation?${confirmationParams.toString()}`);
       } else if (result.status === "completed") {
         throw new Error("Payment completed but no order id was returned");
       } else {
-        throw new Error(result.message ?? "Payment failed");
+        throw new Error(
+          result.message ?? result.result_description ?? "Payment failed",
+        );
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -237,6 +346,15 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       {error && (
         <div className="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
           {error}
+        </div>
+      )}
+
+      {technicalResponse !== null && technicalResponse !== undefined && (
+        <div className="bg-slate-950 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto">
+          <p className="font-semibold mb-2">Technical response</p>
+          <pre className="whitespace-pre-wrap break-all font-mono">
+            {formatTechnicalResponse(technicalResponse)}
+          </pre>
         </div>
       )}
 
