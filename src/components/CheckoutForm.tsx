@@ -17,6 +17,20 @@ interface EncryptedCardDetails {
   cvv: string;
 }
 
+interface SessionErrorResponse {
+  error?: string;
+}
+
+interface SessionCreateResponse {
+  id: string;
+}
+
+interface CheckoutCompleteResponse {
+  status?: string;
+  order_id?: string;
+  message?: string;
+}
+
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
 const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
 const EVERVAULT_CONFIGURED =
@@ -83,11 +97,11 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
       });
 
       if (!sessionResp.ok) {
-        const data = await sessionResp.json();
+        const data = (await sessionResp.json()) as SessionErrorResponse;
         throw new Error(data.error ?? "Failed to create session");
       }
 
-      const session = await sessionResp.json();
+      const session = (await sessionResp.json()) as SessionCreateResponse;
 
       if (!EVERVAULT_CONFIGURED) {
         throw new Error(
@@ -122,13 +136,15 @@ export default function CheckoutForm({ products }: { products: Product[] }) {
         },
       );
 
-      const result = await completeResp.json();
+      const result = (await completeResp.json()) as CheckoutCompleteResponse;
 
-      if (result.status === "completed") {
+      if (result.status === "completed" && result.order_id) {
         localStorage.removeItem("cart");
         router.push(
           `/confirmation?order_id=${encodeURIComponent(result.order_id)}`,
         );
+      } else if (result.status === "completed") {
+        throw new Error("Payment completed but no order id was returned");
       } else {
         throw new Error(result.message ?? "Payment failed");
       }

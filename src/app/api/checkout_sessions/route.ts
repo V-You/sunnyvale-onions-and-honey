@@ -3,9 +3,13 @@ import { getProductBySku } from "@/lib/catalog";
 import type { CheckoutSession, CartItem } from "@/lib/types";
 import { getSessionsKV } from "@/lib/kv";
 
+export const runtime = "edge";
+
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const items: { sku: string; quantity: number }[] = body.items;
+  const body = (await request.json()) as {
+    items?: { sku: string; quantity: number }[];
+  };
+  const items = body.items;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json(
