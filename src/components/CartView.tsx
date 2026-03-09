@@ -250,7 +250,7 @@ export default function CartView({ products }: { products: Product[] }) {
                         disabled={!entry.psp_transaction_id || querying}
                         className="rounded-lg border border-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-[var(--color-green-dark)] transition-colors hover:bg-[var(--color-green-dark)]/5 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Query processor TX ID
+                        Query PSP TX ID
                       </button>
                       {entry.merchant_evervault_payment_id && (
                         <Link
