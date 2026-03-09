@@ -1,24 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { addCartItem } from "@/lib/cart";
 import type { Product } from "@/lib/types";
 
 export default function AddToCartButton({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
 
   function handleAdd() {
-    // read current cart from localStorage
-    const raw = localStorage.getItem("cart");
-    const cart: { sku: string; quantity: number }[] = raw ? JSON.parse(raw) : [];
-
-    const existing = cart.find((item) => item.sku === product.sku);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ sku: product.sku, quantity: 1 });
-    }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
+    addCartItem(product.sku);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }

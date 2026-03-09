@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CartLink from "@/components/CartLink";
 
 export default function Header() {
   return (
@@ -14,9 +15,7 @@ export default function Header() {
           <Link href="/products" className="hover:text-[var(--color-amber)] transition-colors">
             Shop
           </Link>
-          <Link href="/cart" className="hover:text-[var(--color-amber)] transition-colors">
-            Cart
-          </Link>
+          <CartLink />
         </div>
       </nav>
     </header>

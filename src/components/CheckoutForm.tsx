@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, EvervaultProvider, themes, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
 import { ACP_LATEST_API_VERSION } from "@/lib/acp-shared";
+import { clearCart, loadCart } from "@/lib/cart";
 import {
   formatProductPrice,
   getProductEffectivePriceCents,
@@ -187,10 +188,7 @@ export default function CheckoutForm(
   const router = useRouter();
 
   useEffect(() => {
-    const rawCart = localStorage.getItem("cart");
-    if (rawCart) {
-      setCart(JSON.parse(rawCart));
-    }
+    setCart(loadCart());
 
     const storedPayments = loadSavedPaymentMethods();
     setSavedPayments(storedPayments);
@@ -457,7 +455,7 @@ export default function CheckoutForm(
           rememberCurrentEncryptedCard();
         }
 
-        localStorage.removeItem("cart");
+        clearCart();
         const confirmationParams = new URLSearchParams({
           order_id: result.order_id,
         });

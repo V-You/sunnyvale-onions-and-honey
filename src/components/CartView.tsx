@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
+import { loadCart, saveCart, type StoredCartEntry } from "@/lib/cart";
 import {
   formatProductPrice,
   getProductEffectivePriceCents,
@@ -17,13 +18,8 @@ import type {
   RecentTransactionEntry,
 } from "@/lib/types";
 
-interface CartEntry {
-  sku: string;
-  quantity: number;
-}
-
 export default function CartView({ products }: { products: Product[] }) {
-  const [cart, setCart] = useState<CartEntry[]>([]);
+  const [cart, setCart] = useState<StoredCartEntry[]>([]);
   const [history, setHistory] = useState<RecentTransactionEntry[]>([]);
   const [selectedTransaction, setSelectedTransaction] =
     useState<RecentTransactionEntry | null>(null);
@@ -36,14 +32,13 @@ export default function CartView({ products }: { products: Product[] }) {
   const router = useRouter();
 
   useEffect(() => {
-    const raw = localStorage.getItem("cart");
-    if (raw) setCart(JSON.parse(raw));
+    setCart(loadCart());
     setHistory(loadTransactionHistory());
   }, []);
 
-  const save = useCallback((updated: CartEntry[]) => {
-    setCart(updated);
-    localStorage.setItem("cart", JSON.stringify(updated));
+  const save = useCallback((updated: StoredCartEntry[]) => {
+    const normalized = saveCart(updated);
+    setCart(normalized);
   }, []);
 
   function updateQuantity(sku: string, delta: number) {
