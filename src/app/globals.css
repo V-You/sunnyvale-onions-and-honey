@@ -79,7 +79,7 @@ footer div button {
     background: brown;
     padding: 2px 12px;
     border-radius: 18px;
-    border: 1px solid maroon;    
+    border: 1px solid rgb(102, 1, 1);    
 }
 footer div button:hover {
     background: red;
