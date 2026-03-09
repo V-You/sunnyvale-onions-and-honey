@@ -71,6 +71,13 @@ interface CheckoutCompleteResponse {
   message?: string;
   error?: string;
   technical_message?: string;
+  merchant_evervault_payment?: {
+    id?: string;
+    source?: "card" | "saved_evervault";
+    card_token?: string;
+    card_token_preview?: string;
+    card_holder?: string;
+  };
 }
 
 type CheckoutMode = "card" | "saved_evervault" | "stripe_spt";
@@ -501,6 +508,24 @@ export default function CheckoutForm(
         }
         if (result.status) {
           confirmationParams.set("status", result.status);
+        }
+        if (result.merchant_evervault_payment?.id) {
+          confirmationParams.set(
+            "merchant_evervault_payment_id",
+            result.merchant_evervault_payment.id,
+          );
+        }
+        if (result.merchant_evervault_payment?.card_token_preview) {
+          confirmationParams.set(
+            "evervault_card_token_preview",
+            result.merchant_evervault_payment.card_token_preview,
+          );
+        }
+        if (result.merchant_evervault_payment?.source) {
+          confirmationParams.set(
+            "evervault_payment_source",
+            result.merchant_evervault_payment.source,
+          );
         }
 
         router.push(`/confirmation?${confirmationParams.toString()}`);

@@ -31,6 +31,7 @@ import type {
   CheckoutSession,
   PaymentMethod,
   Env,
+  MerchantEvervaultPaymentReference,
   MerchantSavedPaymentMethod,
   PaymentFlowName,
   SavedEvervaultPaymentMethod,
@@ -79,6 +80,34 @@ function hasValidDelegatedStripeToken(
   return Boolean(
     paymentMethod.payment_method_id || paymentMethod.confirmation_token,
   );
+}
+
+function isEvervaultCiphertextToken(value: string): boolean {
+  return value.startsWith("ev:");
+}
+
+function createCiphertextPreview(value: string): string {
+  if (value.length <= 40) {
+    return value;
+  }
+
+  return `${value.slice(0, 18)}...${value.slice(-12)}`;
+}
+
+function createMerchantEvervaultPaymentReference(
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
+): MerchantEvervaultPaymentReference | null {
+  if (!isEvervaultCiphertextToken(paymentMethod.card_number)) {
+    return null;
+  }
+
+  return {
+    id: `mev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    source: paymentMethod.type,
+    card_token: paymentMethod.card_number,
+    card_token_preview: createCiphertextPreview(paymentMethod.card_number),
+    card_holder: paymentMethod.card_holder,
+  };
 }
 
 function readSptCredential(
@@ -501,6 +530,12 @@ export async function POST(
     );
   }
 
+  const merchantEvervaultPayment = isEncryptedCardPaymentMethod(
+    processorPaymentMethod,
+  )
+    ? createMerchantEvervaultPaymentReference(processorPaymentMethod)
+    : null;
+
   try {
     const result = await routeToPSP(
       env as Env,
@@ -519,6 +554,7 @@ export async function POST(
     session.result_description = result.result_description ?? result.error;
     session.completed_at = Date.now();
     session.payment_metrics = result.payment_metrics;
+    session.merchant_evervault_payment = merchantEvervaultPayment ?? undefined;
 
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 

@@ -19,6 +19,9 @@ export default async function ConfirmationPage({
     psp_transaction_id?: string;
     result_code?: string;
     result_description?: string;
+    merchant_evervault_payment_id?: string;
+    evervault_card_token_preview?: string;
+    evervault_payment_source?: string;
   }>;
 }) {
   const {
@@ -33,6 +36,9 @@ export default async function ConfirmationPage({
     psp_transaction_id,
     result_code,
     result_description,
+    merchant_evervault_payment_id,
+    evervault_card_token_preview,
+    evervault_payment_source,
   } = await searchParams;
 
   const parsedAmount = amount_total_cents ? Number(amount_total_cents) : null;
@@ -58,7 +64,6 @@ export default async function ConfirmationPage({
 
       <main className="flex-1 py-20 px-6">
         <div className="max-w-lg mx-auto text-center">
-          <div className="text-6xl mb-6">&#x2705;</div>
           <h1 className="text-3xl font-bold mb-4">Order confirmed!</h1>
           <p className="text-gray-600 mb-2">
             The onions are on their way.
@@ -128,9 +133,36 @@ export default async function ConfirmationPage({
                     <dd className="font-mono text-xs">{result_code}</dd>
                   </div>
                 )}
+                {merchant_evervault_payment_id && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Merchant Evervault record</dt>
+                    <dd className="font-mono text-xs break-all">
+                      {merchant_evervault_payment_id}
+                    </dd>
+                  </div>
+                )}
+                {evervault_card_token_preview && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Evervault card token</dt>
+                    <dd className="font-mono text-xs break-all text-right">
+                      {evervault_card_token_preview}
+                    </dd>
+                  </div>
+                )}
+                {evervault_payment_source && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Evervault source</dt>
+                    <dd className="font-medium">{evervault_payment_source}</dd>
+                  </div>
+                )}
               </dl>
               {result_description && (
                 <p className="mt-4 text-sm text-gray-600">{result_description}</p>
+              )}
+              {merchant_evervault_payment_id && (
+                <p className="mt-3 text-xs text-gray-500">
+                  The merchant received Evervault ciphertext before Relay decrypted it for the processor. This receipt shows the merchant record id plus a preview of the stored card ciphertext. CVV is intentionally not retained here.
+                </p>
               )}
               {processor === "stripe" && merchant_transaction_id && (
                 <p className="mt-3 text-xs text-gray-500">

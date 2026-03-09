@@ -323,6 +323,14 @@ export interface AcpCheckoutSessionCompleteResponse
   order: AcpCheckoutOrder;
 }
 
+export interface MerchantEvervaultPaymentReference {
+  id: string;
+  source: "card" | "saved_evervault";
+  card_token: string;
+  card_token_preview: string;
+  card_holder?: string;
+}
+
 export interface MerchantSavedPaymentDisplayMetadata {
   brand?: string;
   last4?: string;
@@ -356,6 +364,7 @@ export interface CheckoutSession {
   agent_capabilities?: AcpAgentCapabilities;
   merchant_customer_id?: string;
   merchant_saved_payment_methods?: MerchantSavedPaymentOption[];
+  merchant_evervault_payment?: MerchantEvervaultPaymentReference;
   authentication_metadata?: AcpAuthenticationMetadata;
   authentication_requirement?: {
     handler_id: string;
