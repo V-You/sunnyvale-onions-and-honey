@@ -24,8 +24,8 @@ header nav a.text-xl em {display:none}
   background-position: 3% 0;
 }*/
 #SVOH-logo {
-  width: 128px;
-  height: 128px;
+  width: 256px;
+  height: 256px;
   position:absolute;
   top:200px;
   left:2%;
