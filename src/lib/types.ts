@@ -215,8 +215,44 @@ export interface AcpPaymentData {
 export interface AcpCheckoutSessionCompleteRequest {
   buyer?: AcpCheckoutBuyer;
   payment_data?: AcpPaymentData;
-  authentication_result?: unknown;
+  authentication_result?: AcpAuthenticationResult;
   payment_method?: PaymentMethod;
+}
+
+export interface AcpAuthenticationMetadata {
+  acquirer_details: {
+    acquirer_bin: string;
+    acquirer_country: string;
+    acquirer_merchant_id: string;
+    merchant_name: string;
+    requestor_id?: string;
+  };
+  directory_server: "visa" | "mastercard" | "american_express";
+  flow_preference?: {
+    type: "challenge" | "frictionless";
+    challenge?: {
+      challenge_window_size?: "01" | "02" | "03" | "04" | "05";
+    };
+  };
+}
+
+export interface AcpAuthenticationResult {
+  outcome:
+    | "authenticated"
+    | "attempt_acknowledged"
+    | "denied"
+    | "not_authenticated"
+    | "unavailable";
+  outcome_details?: {
+    three_ds_cryptogram?: string;
+    electronic_commerce_indicator?: string;
+    transaction_id?: string;
+    version?: string;
+    authentication_value?: string;
+    trans_status?: string;
+    trans_status_reason?: string;
+    cardholder_info?: string;
+  };
 }
 
 export interface AcpCheckoutSessionLineItem {
@@ -244,6 +280,10 @@ export interface AcpCheckoutTotal {
 
 export interface AcpCheckoutMessage {
   type: "info" | "error";
+  code?: string;
+  severity?: "info" | "warning" | "error";
+  resolution?: "recoverable" | "requires_buyer_action" | "requires_buyer_input";
+  param?: string;
   content_type: "plain" | "markdown";
   content: string;
 }
@@ -258,6 +298,7 @@ export interface AcpCheckoutSessionResponse {
   status:
     | "not_ready_for_payment"
     | "ready_for_payment"
+    | "authentication_required"
     | "completed"
     | "canceled"
     | "in_progress";
@@ -267,6 +308,7 @@ export interface AcpCheckoutSessionResponse {
   totals: AcpCheckoutTotal[];
   messages: AcpCheckoutMessage[];
   links: AcpCheckoutLink[];
+  authentication_metadata?: AcpAuthenticationMetadata;
 }
 
 export interface AcpCheckoutOrder {
@@ -293,13 +335,19 @@ export interface MerchantSavedPaymentOption {
   id: string;
   display_name: string;
   display_metadata?: MerchantSavedPaymentDisplayMetadata;
+  supports_3ds?: boolean;
   demo?: boolean;
 }
 
 // checkout session (KV-stored)
 export interface CheckoutSession {
   id: string;
-  status: "open" | "completed" | "failed" | "cancelled";
+  status:
+    | "open"
+    | "authentication_required"
+    | "completed"
+    | "failed"
+    | "cancelled";
   items: CartItem[];
   amount_total_cents: number;
   currency: string;
@@ -308,6 +356,13 @@ export interface CheckoutSession {
   agent_capabilities?: AcpAgentCapabilities;
   merchant_customer_id?: string;
   merchant_saved_payment_methods?: MerchantSavedPaymentOption[];
+  authentication_metadata?: AcpAuthenticationMetadata;
+  authentication_requirement?: {
+    handler_id: string;
+    token_id: string;
+    instrument_type: string;
+    payment_flow: PaymentFlowName;
+  };
   created_at: number;
   order_id?: string;
   merchant_transaction_id?: string;

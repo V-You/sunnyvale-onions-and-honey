@@ -33,6 +33,57 @@
 - Completion calls are routed to the active PSP through Evervault relay domains.
 - Agent flows discover capabilities through ACP and use JSON APIs.
 
+## ACP status
+
+The demo now implements a meaningful ACP surface across discovery, checkout,
+delegated payment, seller-backed saved cards, customer-linked handler scoping,
+and a first authentication hook for 3DS-style flows.
+
+Current ACP capability state by implementation phase:
+
+1. **Phase 1 - discovery and versioning**: `/.well-known/acp.json` is served by
+  the app router, ACP endpoints require `API-Version`, and the ACP routes are
+  CORS-aware.
+  Limitation: discovery is REST-only, does not expose MCP transport, and does
+  not yet advertise signing keys, request-signature requirements, or richer
+  extension metadata.
+2. **Phase 2 - capability negotiation and handler declarations**: checkout
+  session create, retrieve, and update return ACP-shaped cart state with
+  `capabilities.payment_methods`, negotiated intervention support, and
+  `capabilities.payment.handlers`.
+  Limitation: the response is still a hybrid compatibility shape because legacy
+  fields remain present for the human storefront and older internal callers.
+3. **Phase 3 - delegated payment and handler-based completion**: the demo now
+  supports `POST /api/agentic_commerce/delegate_payment`, delegated token
+  storage, and ACP-native completion with `payment_data.handler_id` plus SPT
+  credentials.
+  Limitation: delegated tokens are demo-scoped records in KV rather than real
+  PSP-issued shared payment tokens or a hardened long-lived vault service.
+4. **Phase 4 - customer-linked seller-backed saved cards**: seller-backed saved
+  card handlers are now filtered by resolved merchant customer and only expose
+  active, non-disabled, non-expired records for that session.
+  Limitation: merchant customer identity is still a demo mapping from
+  `buyer.email`, not a real merchant account/login or identity-linking flow.
+5. **Phase 5 - authentication and 3DS hardening**: handlers can now advertise
+  `supports_3ds`, discovery exposes `3ds` as an intervention type, delegated
+  completions can transition into `authentication_required`, session responses
+  include `authentication_metadata`, and completion accepts
+  `authentication_result` on the second call.
+  Limitation: this is a protocol-shaped demo hook, not a full
+  `delegate_authentication` implementation. There is no real issuer/browser
+  challenge lifecycle yet, and 3DS requirement is simulated from delegated
+  payment metadata and risk signals rather than a live directory server.
+
+Additional ACP caveats that still apply:
+
+- The human checkout UI still uses the legacy completion payload, so the ACP
+  handler flow and the storefront flow intentionally coexist for now.
+- Policy links, fulfillment detail richness, and post-purchase webhooks are not
+  yet fully fleshed out in the ACP response model.
+- The demo is best viewed as an ACP alignment and architecture prototype, not a
+  claim of full conformance with every current ACP and delegate-authentication
+  RFC.
+
 ## Stack
 
 - Evervault for widget and PCI data (dual-custody encryption)

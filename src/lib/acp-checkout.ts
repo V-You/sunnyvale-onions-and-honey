@@ -1,6 +1,8 @@
 import type {
   AcpAgentCapabilities,
+  AcpAuthenticationMetadata,
   AcpCheckoutBuyer,
+  AcpCheckoutMessage,
   AcpCheckoutSessionCompleteResponse,
   AcpCheckoutItemInput,
   AcpCheckoutSessionLineItem,
@@ -20,7 +22,7 @@ import type {
 
 export const ACP_MERCHANT_ID = "sunnyvale-onions-and-honey";
 export const ACP_TOKENIZED_CARD_HANDLER_ID = "card_primary";
-const SELLER_SUPPORTED_INTERVENTIONS: AcpInterventionType[] = [];
+const SELLER_SUPPORTED_INTERVENTIONS: AcpInterventionType[] = ["3ds"];
 const SUPPORTED_CARD_BRANDS = ["visa", "mastercard", "amex", "discover"];
 const SUPPORTED_CARD_FUNDING_TYPES: Array<"credit" | "debit"> = [
   "credit",
@@ -131,7 +133,7 @@ function createTokenizedCardHandler(
       psp: processor,
       accepted_brands: [...SUPPORTED_CARD_BRANDS],
       accepted_funding_types: [...SUPPORTED_CARD_FUNDING_TYPES],
-      supports_3ds: false,
+      supports_3ds: true,
       environment: "sandbox",
     },
     display_order: 0,
@@ -161,7 +163,7 @@ function createSellerBackedSavedCardHandlers(
       payment_method_id: paymentMethod.id,
       display_name: paymentMethod.display_name,
       display_metadata: paymentMethod.display_metadata ?? {},
-      supports_3ds: false,
+      supports_3ds: paymentMethod.supports_3ds ?? false,
     },
     display_order: index + 1,
     display_name: paymentMethod.display_name,
@@ -221,10 +223,19 @@ export function createCheckoutCapabilities(
   activeProcessor: string | undefined,
   merchantSavedPaymentMethods: MerchantSavedPaymentOption[],
   agentCapabilities: AcpAgentCapabilities | undefined,
+  authenticationMetadata?: AcpAuthenticationMetadata,
 ): CheckoutCapabilities {
+  const negotiatedInterventions = createNegotiatedInterventions(agentCapabilities);
+
   return {
     payment_methods: createPaymentMethods(merchantSavedPaymentMethods),
-    interventions: createNegotiatedInterventions(agentCapabilities),
+    interventions: authenticationMetadata
+      ? {
+          supported: negotiatedInterventions.supported,
+          required: ["3ds"],
+          enforcement: "always",
+        }
+      : negotiatedInterventions,
     payment: {
       handlers: [
         createTokenizedCardHandler(activeProcessor),
@@ -240,6 +251,8 @@ function mapCheckoutStatus(
   switch (status) {
     case "open":
       return "ready_for_payment";
+    case "authentication_required":
+      return "authentication_required";
     case "completed":
       return "completed";
     case "cancelled":
@@ -297,6 +310,27 @@ function createTotals(amountTotalCents: number): AcpCheckoutTotal[] {
   ];
 }
 
+function createMessages(
+  session: CheckoutSession,
+): AcpCheckoutMessage[] {
+  if (session.status !== "authentication_required") {
+    return [];
+  }
+
+  return [
+    {
+      type: "error",
+      code: "requires_3ds",
+      severity: "warning",
+      resolution: "requires_buyer_action",
+      param: "$.authentication_result",
+      content_type: "plain",
+      content:
+        "This checkout session requires 3D Secure authentication. Repeat completion with authentication_result after issuer authentication finishes.",
+    },
+  ];
+}
+
 export function createCheckoutSessionResponse(
   session: CheckoutSession,
   activeProcessor: string | undefined,
@@ -309,6 +343,7 @@ export function createCheckoutSessionResponse(
       activeProcessor,
       merchantSavedPaymentMethods,
       session.agent_capabilities,
+      session.authentication_metadata,
     );
   const { merchant_customer_id, ...legacyCompatibleSession } = session;
 
@@ -319,8 +354,11 @@ export function createCheckoutSessionResponse(
     capabilities,
     line_items: createLineItems(session.items),
     totals: createTotals(session.amount_total_cents),
-    messages: [],
+    messages: createMessages(session),
     links: [],
+    ...(session.authentication_metadata
+      ? { authentication_metadata: session.authentication_metadata }
+      : {}),
   };
 }
 

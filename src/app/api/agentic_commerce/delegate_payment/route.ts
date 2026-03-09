@@ -7,6 +7,7 @@ import {
   isSellerBackedSavedCardHandler,
   isTokenizedCardHandler,
 } from "@/lib/acp-checkout";
+import { handlerSupports3ds } from "@/lib/acp-authentication";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import {
   normalizeDelegateCardMethod,
@@ -81,6 +82,8 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as AcpDelegatePaymentRequest;
+  const normalizedMetadata = normalizeStringMap(body.metadata);
+
 
   if (!body || typeof body.handler_id !== "string" || body.handler_id.length === 0) {
     return acpJson(
@@ -215,6 +218,14 @@ export async function POST(request: NextRequest) {
   }
 
   let storedPaymentMethod;
+  const shouldRequire3ds =
+    handlerSupports3ds(handler) &&
+    (normalizedMetadata.force_3ds === "true" ||
+      body.risk_signals.some(
+        (signal) =>
+          signal.type === "3ds_required" ||
+          (typeof signal.score === "number" && signal.score >= 80),
+      ));
 
   if (isTokenizedCardHandler(handler)) {
     if (body.payment_method.type !== "card") {
@@ -283,7 +294,10 @@ export async function POST(request: NextRequest) {
       currency: body.allowance.currency.toLowerCase(),
     },
     payment_method: storedPaymentMethod,
-    metadata: normalizeStringMap(body.metadata),
+    metadata: {
+      ...normalizedMetadata,
+      requires_3ds: shouldRequire3ds ? "true" : "false",
+    },
   });
 
   const response: AcpDelegatePaymentResponse = {

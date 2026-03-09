@@ -83,6 +83,7 @@ export function createAcpDiscoveryResponse(request: NextRequest) {
     transports: ["rest"],
     capabilities: {
       services: ["checkout", "delegate_payment"],
+      intervention_types: ["3ds"],
       supported_currencies: ["usd"],
       supported_locales: ["en-US"],
     },

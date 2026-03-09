@@ -26,6 +26,7 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
     option: {
       id: "merchant_demo_saved_card_aci_primary",
       display_name: "Merchant demo Visa ending in 0000",
+      supports_3ds: true,
       display_metadata: {
         brand: "visa",
         last4: "0000",
@@ -53,6 +54,7 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
     option: {
       id: "merchant_demo_saved_card_stripe_primary",
       display_name: "Merchant demo Visa ending in 4242",
+      supports_3ds: true,
       display_metadata: {
         brand: "visa",
         last4: "4242",
@@ -80,6 +82,7 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
     option: {
       id: "merchant_demo_saved_card_stripe_vip",
       display_name: "VIP Visa ending in 1111",
+      supports_3ds: true,
       display_metadata: {
         brand: "visa",
         last4: "1111",
@@ -107,6 +110,7 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
     option: {
       id: "merchant_demo_saved_card_stripe_expired",
       display_name: "Expired Visa ending in 1881",
+      supports_3ds: true,
       display_metadata: {
         brand: "visa",
         last4: "1881",
@@ -134,6 +138,7 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
     option: {
       id: "merchant_demo_saved_card_aci_disabled",
       display_name: "Disabled ACI card ending in 2222",
+      supports_3ds: true,
       display_metadata: {
         brand: "visa",
         last4: "2222",

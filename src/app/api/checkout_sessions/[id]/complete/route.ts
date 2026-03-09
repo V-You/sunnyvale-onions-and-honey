@@ -2,16 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { ACP_VERSION_HEADER, requireAcpApiVersion } from "@/lib/acp";
 import {
   createCheckoutCompletionResponse,
+  createCheckoutSessionResponse,
   getCheckoutPaymentHandler,
   getHandlerPaymentMethodId,
   isSellerBackedSavedCardHandler,
   isTokenizedCardHandler,
 } from "@/lib/acp-checkout";
 import {
+  createAuthenticationMetadata,
+  delegatedTokenRequires3ds,
+  handlerSupports3ds,
+  isSuccessfulAuthenticationResult,
+} from "@/lib/acp-authentication";
+import {
   isDelegatedPaymentTokenExpired,
   markDelegatedPaymentTokenUsed,
   readDelegatedPaymentToken,
 } from "@/lib/acp-delegate-payment";
+import { createAcpError } from "@/lib/acp-errors";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
@@ -104,6 +112,14 @@ function readSptCredential(
     : null;
 }
 
+function getFlatErrorMessage(payload: unknown): string | null {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  return typeof payload.message === "string" ? payload.message : null;
+}
+
 export async function OPTIONS(request: NextRequest) {
   const env = getEnv();
   return corsPreflight(
@@ -179,7 +195,7 @@ export async function POST(
   }
 
   const session: CheckoutSession = JSON.parse(raw);
-  if (session.status !== "open") {
+  if (session.status !== "open" && session.status !== "authentication_required") {
     return acpJson(
       { error: "Session not open or already completed" },
       { status: 409 },
@@ -190,11 +206,42 @@ export async function POST(
   const pm = body.payment_method;
   const paymentData = body.payment_data;
 
+  if (session.status === "authentication_required" && !body.authentication_result) {
+    return acpJson(
+      createAcpError(
+        "This checkout session requires issuer authentication. The request must include 'authentication_result'.",
+        {
+          code: "requires_3ds",
+          param: "$.authentication_result",
+        },
+      ),
+      { status: 400 },
+    );
+  }
+
   let processorPaymentMethod: PaymentMethod | null = null;
   let paymentFlow: PaymentFlowName = "card";
+  let delegatedTokenIdFromContext: string | null = null;
 
-  if (paymentData) {
-    const handler = getCheckoutPaymentHandler(session, paymentData.handler_id);
+  if (paymentData || session.authentication_requirement) {
+    const handlerId = paymentData?.handler_id ?? session.authentication_requirement?.handler_id;
+    const instrumentType =
+      paymentData?.instrument.type ?? session.authentication_requirement?.instrument_type;
+    const delegatedTokenId =
+      (paymentData
+        ? readSptCredential(paymentData.instrument.credential)?.token
+        : null) ?? session.authentication_requirement?.token_id;
+
+    if (!handlerId || !instrumentType || !delegatedTokenId) {
+      return acpJson(
+        { error: "payment_data is required for handler-based completion" },
+        { status: 400 },
+      );
+    }
+
+    delegatedTokenIdFromContext = delegatedTokenId;
+
+    const handler = getCheckoutPaymentHandler(session, handlerId);
     if (!handler) {
       return acpJson(
         { error: "payment_data.handler_id is not valid for this checkout session" },
@@ -203,8 +250,8 @@ export async function POST(
     }
 
     if (
-      paymentData.instrument.handler_id &&
-      paymentData.instrument.handler_id !== paymentData.handler_id
+      paymentData?.instrument.handler_id &&
+      paymentData.instrument.handler_id !== handlerId
     ) {
       return acpJson(
         { error: "payment_data.instrument.handler_id must match payment_data.handler_id" },
@@ -212,15 +259,7 @@ export async function POST(
       );
     }
 
-    const credential = readSptCredential(paymentData.instrument.credential);
-    if (!credential) {
-      return acpJson(
-        { error: "payment_data.instrument.credential must include type=spt and token" },
-        { status: 400 },
-      );
-    }
-
-    const delegatedToken = await readDelegatedPaymentToken(credential.token);
+    const delegatedToken = await readDelegatedPaymentToken(delegatedTokenId);
     if (!delegatedToken) {
       return acpJson(
         { error: "Delegated payment token not found" },
@@ -249,7 +288,7 @@ export async function POST(
       );
     }
 
-    if (delegatedToken.handler_id !== paymentData.handler_id) {
+    if (delegatedToken.handler_id !== handlerId) {
       return acpJson(
         { error: "Delegated payment token does not match payment_data.handler_id" },
         { status: 400 },
@@ -284,7 +323,7 @@ export async function POST(
     }
 
     if (isTokenizedCardHandler(handler)) {
-      if (paymentData.instrument.type !== "card") {
+      if (instrumentType !== "card") {
         return acpJson(
           { error: "Tokenized card handler requires instrument.type=card" },
           { status: 400 },
@@ -301,7 +340,7 @@ export async function POST(
       processorPaymentMethod = delegatedToken.payment_method;
       paymentFlow = "card";
     } else if (isSellerBackedSavedCardHandler(handler)) {
-      if (paymentData.instrument.type !== "seller_backed_saved_card") {
+      if (instrumentType !== "seller_backed_saved_card") {
         return acpJson(
           { error: "Seller-backed saved card handler requires instrument.type=seller_backed_saved_card" },
           { status: 400 },
@@ -340,6 +379,49 @@ export async function POST(
       );
     }
 
+    if (
+      session.status !== "authentication_required" &&
+      handlerSupports3ds(handler) &&
+      delegatedTokenRequires3ds(delegatedToken.metadata)
+    ) {
+      session.status = "authentication_required";
+      session.authentication_metadata = createAuthenticationMetadata(
+        session,
+        handler,
+      );
+      session.authentication_requirement = {
+        handler_id: handler.id,
+        token_id: delegatedToken.id,
+        instrument_type: instrumentType,
+        payment_flow: paymentFlow,
+      };
+
+      await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
+
+      return acpJson(
+        createCheckoutSessionResponse(session, env.ACTIVE_PSP),
+        undefined,
+      );
+    }
+
+    if (
+      session.status === "authentication_required" &&
+      !isSuccessfulAuthenticationResult(body.authentication_result)
+    ) {
+      return acpJson(
+        createAcpError(
+          "Issuer authentication did not succeed. Provide a successful authentication_result before completing checkout.",
+          {
+            code: "authentication_failed",
+            param: "$.authentication_result",
+          },
+        ),
+        { status: 400 },
+      );
+    }
+
+    session.authentication_metadata = undefined;
+    session.authentication_requirement = undefined;
     await markDelegatedPaymentTokenUsed(delegatedToken);
   } else {
     if (!pm) {
@@ -441,21 +523,40 @@ export async function POST(
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 
     if (!result.success) {
+      const failurePayload = {
+        ...createCheckoutSessionResponse(session, env.ACTIVE_PSP),
+        amount_total_cents: session.amount_total_cents,
+        completed_at: session.completed_at,
+        processor: result.processor,
+        payment_flow: result.payment_flow,
+        payment_metrics: result.payment_metrics,
+        merchant_transaction_id: session.merchant_transaction_id,
+        psp_transaction_id: result.psp_transaction_id,
+        result_code: result.result_code,
+        result_description: result.result_description,
+        response_body: result.response_body,
+        message: result.error ?? result.result_description,
+      };
+
       return acpJson(
         {
-          status: session.status,
-          amount_total_cents: session.amount_total_cents,
-          currency: session.currency.toLowerCase(),
-          completed_at: session.completed_at,
-          processor: result.processor,
-          payment_flow: result.payment_flow,
-          payment_metrics: result.payment_metrics,
-          merchant_transaction_id: session.merchant_transaction_id,
-          psp_transaction_id: result.psp_transaction_id,
-          result_code: result.result_code,
-          result_description: result.result_description,
-          response_body: result.response_body,
-          message: result.error ?? result.result_description,
+          ...failurePayload,
+          messages:
+            failurePayload.messages.length > 0
+              ? failurePayload.messages
+              : [
+                  {
+                    type: "error",
+                    code: "payment_declined",
+                    severity: "error",
+                    resolution: "recoverable",
+                    content_type: "plain",
+                    content:
+                      result.error ??
+                      result.result_description ??
+                      "Payment authorization failed.",
+                  },
+                ],
         },
         undefined,
       );
@@ -491,14 +592,19 @@ export async function POST(
       undefined,
     );
   } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Unknown payment processing error";
+
     return acpJson(
       {
         status: "failed",
+        type: "processing_error",
+        code: "processor_failure",
+        message: errorMessage,
         error: "Payment processing failed",
-        technical_message:
-          error instanceof Error
-            ? error.message
-            : "Unknown payment processing error",
+        technical_message: errorMessage,
       },
       { status: 502 },
     );
