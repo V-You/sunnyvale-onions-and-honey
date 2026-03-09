@@ -29,7 +29,20 @@ header nav a.text-xl em {display:none}
   position:absolute;
   top:200px;
   left:2%;
-  z-index: 0;
+  z-index: 111;
 }
 
 #hero h1 {color:white}
+
+
+@media screen and (min-width: 320px) and (max-width: 768px) {
+  /* CSS rules for this screen range */
+#SVOH-logo {
+  width: 32px;
+  height: 32px;
+  position:absolute;
+  top:8px;
+  left:8px;
+  z-index: 111;
+}
+}
