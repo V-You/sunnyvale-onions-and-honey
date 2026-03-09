@@ -16,7 +16,7 @@ body {
   color: var(--color-green-dark);
 }
 
-header nav a.text-xl em {font-size:.8rem}
+header nav a.text-xl em {font-size:.85rem;font-style:normal;color:#fdf6e3 !important}
 
 /*#hero {
   background-image: url("/logo.png");
