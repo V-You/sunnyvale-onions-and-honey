@@ -18,6 +18,13 @@ function isRecentTransactionEntry(value: unknown): value is RecentTransactionEnt
     typeof entry.amount_total_cents === "number" &&
     typeof entry.currency === "string" &&
     Array.isArray(entry.items) &&
+    (entry.merchant_evervault_payment_id === undefined ||
+      typeof entry.merchant_evervault_payment_id === "string") &&
+    (entry.merchant_evervault_card_token_preview === undefined ||
+      typeof entry.merchant_evervault_card_token_preview === "string") &&
+    (entry.merchant_evervault_source === undefined ||
+      entry.merchant_evervault_source === "card" ||
+      entry.merchant_evervault_source === "saved_evervault") &&
     typeof entry.recorded_at === "number"
   );
 }

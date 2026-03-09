@@ -315,7 +315,6 @@ export async function queryProcessorByMerchantTransactionId(
     const params = new URLSearchParams();
     params.append("merchantTransactionId", merchantTransactionId);
     params.append("entityId", env.ACI_ENTITY_ID);
-    params.append("includeLinkedTransactions", "true");
 
     try {
       const response = await fetch(

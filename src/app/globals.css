@@ -21,16 +21,73 @@ header nav a.text-xl em {
   display:none;
 }
 
-/*#hero {
-  background-image: url("/logo.png");
-  background-repeat: no-repeat;
-  background-position: 3% 0;
-}*/
+#hero {
+    background-image: url(https://images.unsplash.com/photo-1550353127-b0da3aeaa0ca);
+    background-color: #1a3a2a;
+    background-blend-mode: multiply;
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+#hero {
+    background-image: url(https://picsum.photos/g/2000/1200?image=443);
+    background-color: #1a3a2a;
+    background-blend-mode: multiply;
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+#hero {
+    background-image: url(https://images.unsplash.com/photo-1440688807730-73e4e2169fb8?format=auto&auto=compress&dpr=2&crop=entropy&fit=crop&w=1920&h=1282&q=80);
+    background-color: #1a3a2a;
+    background-blend-mode: hard-light;
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+
+header {
+    background-image: url(https://picsum.photos/g/2000/1200?image=443);
+    background-color: #1a3a2a;
+    background-blend-mode: multiply;
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+
+footer {
+background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/49240/ui8-alex-shutin-kKvQJ6rK6S4-unsplash.jpg);
+    background-color: #fdf6e3;
+    background-blend-mode: difference;
+    background-repeat: no-repeat;
+    background-position: right center;
+    opacity: .9;
+}
+
+footer div p {
+    color: #fff !important;
+    font-weight: 500;
+    opacity: 1 !important;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+footer div button {
+    color: #fff !important;
+    font-weight: 700;
+    opacity: 1 !important;
+    font-size: 1rem;
+    text-transform: uppercase;
+    background: maroon;
+    padding: 2px 8px;
+    border-radius: 18px;
+}
+footer div button:hover {
+    background: red;
+    text-decoration:none;
+}
+
+
 #SVOH-logo {
   width: 256px;
   height: 256px;
   position:absolute;
-  top:274px;
+  top:270px;
   left:22px;
   z-index: 111;
 }

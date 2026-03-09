@@ -331,6 +331,33 @@ export interface MerchantEvervaultPaymentReference {
   card_holder?: string;
 }
 
+export interface MerchantVaultCiphertextRecord {
+  card_number: string;
+  expiry_month: string;
+  expiry_year: string;
+  card_holder?: string;
+  source_reference_id?: string;
+}
+
+export interface MerchantVaultRecord {
+  id: string;
+  created_at: number;
+  status: "completed" | "failed";
+  source: "card" | "saved_evervault";
+  checkout_session_id: string;
+  order_id?: string;
+  merchant_transaction_id?: string;
+  psp_transaction_id?: string;
+  merchant_customer_id?: string;
+  processor?: PSPName;
+  payment_flow?: PaymentFlowName;
+  card_token_preview: string;
+  ciphertext_record: MerchantVaultCiphertextRecord;
+  retention: {
+    omitted_fields: string[];
+  };
+}
+
 export interface MerchantSavedPaymentDisplayMetadata {
   brand?: string;
   last4?: string;
@@ -441,6 +468,9 @@ export interface RecentTransactionEntry {
   order_id?: string;
   merchant_transaction_id?: string;
   psp_transaction_id?: string;
+  merchant_evervault_payment_id?: string;
+  merchant_evervault_card_token_preview?: string;
+  merchant_evervault_source?: "card" | "saved_evervault";
   processor: PSPName;
   payment_flow?: PaymentFlowName;
   payment_metrics?: PaymentMetrics;

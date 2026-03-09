@@ -28,6 +28,7 @@ export default function CartView({ products }: { products: Product[] }) {
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryMode, setQueryMode] =
     useState<ProcessorQueryLookupMode | null>(null);
+  const [queryRequestUrl, setQueryRequestUrl] = useState<string | null>(null);
   const [querying, setQuerying] = useState(false);
   const router = useRouter();
 
@@ -94,6 +95,7 @@ export default function CartView({ products }: { products: Product[] }) {
     setQueryResult(null);
     setQueryError(null);
     setQueryMode(lookupMode);
+    setQueryRequestUrl(url);
     setQuerying(true);
 
     try {
@@ -147,6 +149,7 @@ export default function CartView({ products }: { products: Product[] }) {
     setQueryResult(null);
     setQueryError(null);
     setQueryMode(null);
+    setQueryRequestUrl(null);
     setQuerying(false);
   }
 
@@ -221,6 +224,14 @@ export default function CartView({ products }: { products: Product[] }) {
                             {entry.result_code ?? "Not provided"}
                           </dd>
                         </div>
+                        {entry.merchant_evervault_payment_id && (
+                          <div>
+                            <dt className="font-medium text-gray-500">Merchant vault record</dt>
+                            <dd className="break-all font-mono text-xs">
+                              {entry.merchant_evervault_payment_id}
+                            </dd>
+                          </div>
+                        )}
                       </dl>
                     </div>
 
@@ -231,7 +242,7 @@ export default function CartView({ products }: { products: Product[] }) {
                         disabled={!entry.merchant_transaction_id || querying}
                         className="rounded-lg bg-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-green-mid)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Query merchant ref
+                        Query merchant TX ID
                       </button>
                       <button
                         type="button"
@@ -239,8 +250,16 @@ export default function CartView({ products }: { products: Product[] }) {
                         disabled={!entry.psp_transaction_id || querying}
                         className="rounded-lg border border-[var(--color-green-dark)] px-4 py-2 text-sm font-semibold text-[var(--color-green-dark)] transition-colors hover:bg-[var(--color-green-dark)]/5 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Query processor ID
+                        Query processor TX ID
                       </button>
+                      {entry.merchant_evervault_payment_id && (
+                        <Link
+                          href={`/vault?record=${encodeURIComponent(entry.merchant_evervault_payment_id)}`}
+                          className="rounded-lg border border-[var(--color-amber-dark)] px-4 py-2 text-center text-sm font-semibold text-[var(--color-amber-dark)] transition-colors hover:bg-[var(--color-amber-dark)]/5"
+                        >
+                          Open vault record
+                        </Link>
+                      )}
                       {entry.result_description && (
                         <p className="text-xs text-gray-500">
                           {entry.result_description}
@@ -263,6 +282,12 @@ export default function CartView({ products }: { products: Product[] }) {
             <div className="space-y-4">
               <div className="rounded-xl border border-black/10 bg-white/70 p-4">
                 <dl className="grid gap-2 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Request</dt>
+                    <dd className="font-mono text-xs break-all text-right">
+                      {queryRequestUrl ? `GET ${queryRequestUrl}` : "Not started"}
+                    </dd>
+                  </div>
                   <div className="flex justify-between gap-4">
                     <dt className="text-gray-500">Processor</dt>
                     <dd className="font-medium uppercase">{selectedTransaction.processor}</dd>

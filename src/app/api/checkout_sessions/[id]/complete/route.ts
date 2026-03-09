@@ -20,6 +20,7 @@ import {
   readDelegatedPaymentToken,
 } from "@/lib/acp-delegate-payment";
 import { createAcpError } from "@/lib/acp-errors";
+import { storeMerchantVaultRecord } from "@/lib/merchant-vault";
 import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
@@ -32,6 +33,7 @@ import type {
   PaymentMethod,
   Env,
   MerchantEvervaultPaymentReference,
+  MerchantVaultRecord,
   MerchantSavedPaymentMethod,
   PaymentFlowName,
   SavedEvervaultPaymentMethod,
@@ -107,6 +109,42 @@ function createMerchantEvervaultPaymentReference(
     card_token: paymentMethod.card_number,
     card_token_preview: createCiphertextPreview(paymentMethod.card_number),
     card_holder: paymentMethod.card_holder,
+  };
+}
+
+function createMerchantVaultRecord(
+  session: CheckoutSession,
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
+  paymentFlow: PaymentFlowName,
+  reference: MerchantEvervaultPaymentReference,
+): MerchantVaultRecord {
+  return {
+    id: reference.id,
+    created_at: Date.now(),
+    status: session.status === "completed" ? "completed" : "failed",
+    source: reference.source,
+    checkout_session_id: session.id,
+    order_id: session.order_id,
+    merchant_transaction_id: session.merchant_transaction_id,
+    psp_transaction_id: session.psp_transaction_id,
+    merchant_customer_id: session.merchant_customer_id,
+    processor: session.processor,
+    payment_flow: paymentFlow,
+    card_token_preview: reference.card_token_preview,
+    ciphertext_record: {
+      card_number: paymentMethod.card_number,
+      expiry_month: paymentMethod.expiry_month,
+      expiry_year: paymentMethod.expiry_year,
+      ...(paymentMethod.card_holder
+        ? { card_holder: paymentMethod.card_holder }
+        : {}),
+      ...(paymentMethod.type === "saved_evervault"
+        ? { source_reference_id: paymentMethod.saved_payment_id }
+        : {}),
+    },
+    retention: {
+      omitted_fields: ["cvv"],
+    },
   };
 }
 
@@ -555,6 +593,20 @@ export async function POST(
     session.completed_at = Date.now();
     session.payment_metrics = result.payment_metrics;
     session.merchant_evervault_payment = merchantEvervaultPayment ?? undefined;
+
+    if (
+      merchantEvervaultPayment &&
+      isEncryptedCardPaymentMethod(processorPaymentMethod)
+    ) {
+      await storeMerchantVaultRecord(
+        createMerchantVaultRecord(
+          session,
+          processorPaymentMethod,
+          paymentFlow,
+          merchantEvervaultPayment,
+        ),
+      );
+    }
 
     await kv.put(id, JSON.stringify(session), { expirationTtl: 1800 });
 

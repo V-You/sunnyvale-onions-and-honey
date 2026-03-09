@@ -230,6 +230,10 @@ export default function CheckoutForm(
       order_id: result.order_id,
       merchant_transaction_id: result.merchant_transaction_id,
       psp_transaction_id: result.psp_transaction_id,
+      merchant_evervault_payment_id: result.merchant_evervault_payment?.id,
+      merchant_evervault_card_token_preview:
+        result.merchant_evervault_payment?.card_token_preview,
+      merchant_evervault_source: result.merchant_evervault_payment?.source,
       processor: result.processor as PSPName,
       payment_flow: result.payment_flow,
       payment_metrics: result.payment_metrics,
