@@ -256,6 +256,16 @@ export async function POST(
       );
     }
 
+    if (
+      delegatedToken.merchant_customer_id &&
+      delegatedToken.merchant_customer_id !== session.merchant_customer_id
+    ) {
+      return acpJson(
+        { error: "Delegated payment token does not belong to the current merchant customer" },
+        { status: 400 },
+      );
+    }
+
     if (delegatedToken.allowance.max_amount < session.amount_total_cents) {
       return acpJson(
         { error: "Delegated payment token allowance is lower than the checkout total" },
@@ -312,6 +322,7 @@ export async function POST(
 
       const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
         paymentMethodId,
+        session.merchant_customer_id,
       );
       if (!resolvedPaymentMethod) {
         return acpJson(
@@ -344,6 +355,7 @@ export async function POST(
     if (isMerchantSavedPaymentMethod(pm)) {
       const resolvedPaymentMethod = resolveMerchantSavedPaymentMethod(
         pm.payment_method_id,
+        session.merchant_customer_id,
       );
 
       if (!resolvedPaymentMethod) {

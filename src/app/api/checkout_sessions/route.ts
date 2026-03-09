@@ -10,6 +10,7 @@ import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
+import { resolveMerchantCustomerId } from "@/lib/merchant-customers";
 import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
 import type {
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
   const body = (await request.json()) as AcpCheckoutSessionCreateRequest;
   const items = normalizeCheckoutItems(body.items);
   const agentCapabilities = normalizeAgentCapabilities(body.capabilities);
+  const merchantCustomerId = resolveMerchantCustomerId(body.buyer);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return acpJson(
@@ -115,6 +117,7 @@ export async function POST(request: NextRequest) {
   );
   const merchantSavedPaymentMethods = getMerchantSavedPaymentMethods(
     env.ACTIVE_PSP,
+    merchantCustomerId ?? undefined,
   );
   const allowedPaymentMethods = [
     "card",
@@ -137,6 +140,7 @@ export async function POST(request: NextRequest) {
     allowed_payment_methods: allowedPaymentMethods,
     capabilities,
     agent_capabilities: agentCapabilities,
+    merchant_customer_id: merchantCustomerId ?? undefined,
     merchant_saved_payment_methods: merchantSavedPaymentMethods,
     created_at: Date.now(),
   };

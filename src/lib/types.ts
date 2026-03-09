@@ -306,6 +306,7 @@ export interface CheckoutSession {
   allowed_payment_methods: string[];
   capabilities?: CheckoutCapabilities;
   agent_capabilities?: AcpAgentCapabilities;
+  merchant_customer_id?: string;
   merchant_saved_payment_methods?: MerchantSavedPaymentOption[];
   created_at: number;
   order_id?: string;

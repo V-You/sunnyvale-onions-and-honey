@@ -301,7 +301,7 @@ export function createCheckoutSessionResponse(
   session: CheckoutSession,
   activeProcessor: string | undefined,
 ): AcpCheckoutSessionResponse &
-  Omit<CheckoutSession, "status" | "currency" | "capabilities"> {
+  Omit<CheckoutSession, "status" | "currency" | "capabilities" | "merchant_customer_id"> {
   const merchantSavedPaymentMethods = session.merchant_saved_payment_methods ?? [];
   const capabilities =
     session.capabilities ??
@@ -310,9 +310,10 @@ export function createCheckoutSessionResponse(
       merchantSavedPaymentMethods,
       session.agent_capabilities,
     );
+  const { merchant_customer_id, ...legacyCompatibleSession } = session;
 
   return {
-    ...session,
+    ...legacyCompatibleSession,
     status: mapCheckoutStatus(session.status),
     currency: session.currency.toLowerCase(),
     capabilities,

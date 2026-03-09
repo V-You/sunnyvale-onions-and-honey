@@ -277,6 +277,7 @@ export async function POST(request: NextRequest) {
     handler_id: handler.id,
     checkout_session_id: session.id,
     merchant_id: body.allowance.merchant_id,
+    merchant_customer_id: session.merchant_customer_id,
     allowance: {
       ...body.allowance,
       currency: body.allowance.currency.toLowerCase(),

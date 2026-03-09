@@ -23,6 +23,7 @@ export interface StoredDelegatedPaymentToken {
   handler_id: string;
   checkout_session_id: string;
   merchant_id: string;
+  merchant_customer_id?: string;
   allowance: AcpDelegatePaymentAllowance;
   payment_method: StoredDelegatedPaymentMethod;
   metadata: Record<string, string>;

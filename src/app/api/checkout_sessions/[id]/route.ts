@@ -10,6 +10,7 @@ import { getProductBySku } from "@/lib/catalog";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv, getSessionsKV } from "@/lib/kv";
+import { resolveMerchantCustomerId } from "@/lib/merchant-customers";
 import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
 import type {
@@ -214,8 +215,12 @@ export async function PATCH(
   session.agent_capabilities = normalizeAgentCapabilities(
     body.capabilities ?? session.agent_capabilities,
   );
+  if (Object.prototype.hasOwnProperty.call(body, "buyer")) {
+    session.merchant_customer_id = resolveMerchantCustomerId(body.buyer) ?? undefined;
+  }
   session.merchant_saved_payment_methods = getMerchantSavedPaymentMethods(
     env.ACTIVE_PSP,
+    session.merchant_customer_id,
   );
   session.allowed_payment_methods = [
     "card",
