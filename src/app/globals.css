@@ -16,7 +16,10 @@ body {
   color: var(--color-green-dark);
 }
 
-header nav a.text-xl em {font-size:.85rem;font-style:normal;color:#fdf6e3 !important}
+header nav a.text-xl em {
+  font-size:.85rem;font-style:normal;color:#fdf6e3 !important;
+  display:none;
+}
 
 /*#hero {
   background-image: url("/logo.png");
@@ -41,8 +44,9 @@ header nav a.text-xl em {font-size:.85rem;font-style:normal;color:#fdf6e3 !impor
   width: 96px;
   height: 96px;
   position:absolute;
-  top:48px;
-  left:45%;
+  top:32px;
+  left:50%;
+  transform: translate(50%, 0);
   z-index: 111;
 }
 }
