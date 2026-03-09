@@ -96,7 +96,7 @@ export default function Footer() {
     <>
       <footer className="bg-[var( &nbsp; color-green-dark)] text-[var( &nbsp; color-cream)] px-6 py-8 mt-auto">
         <div className="max-w-6xl mx-auto text-center text-sm opacity-80">
-          <p>&copy; {new Date().getFullYear()} Sunnyvale Onions &amp; Honey</p>
+           {/* <p>&copy; {new Date().getFullYear()} Sunnyvale Onions &amp; Honey</p>*/}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs opacity-60">
             {footerEntries.map((entry, entryIndex) => (
               <Fragment key={entry.key}>
