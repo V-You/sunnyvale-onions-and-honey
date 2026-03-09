@@ -20,7 +20,7 @@ header nav a.text-xl em {
   font-size:.85rem;font-style:normal;color:#fdf6e3 !important;
   display:none;
 }
-
+/*
 #hero {
     background-image: url(https://images.unsplash.com/photo-1550353127-b0da3aeaa0ca);
     background-color: #1a3a2a;
@@ -34,7 +34,7 @@ header nav a.text-xl em {
     background-blend-mode: multiply;
     background-repeat:no-repeat;
     background-position:center center;
-}
+}*/
 #hero {
     background-image: url(https://images.unsplash.com/photo-1440688807730-73e4e2169fb8?format=auto&auto=compress&dpr=2&crop=entropy&fit=crop&w=1920&h=1282&q=80);
     background-color: #1a3a2a;
