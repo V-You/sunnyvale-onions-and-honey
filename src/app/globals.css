@@ -41,6 +41,7 @@ header nav a.text-xl em {
     background-blend-mode: hard-light;
     background-repeat:no-repeat;
     background-position:center center;
+    border-bottom: 1px dashed white;
 }
 
 header {
@@ -49,6 +50,7 @@ header {
     background-blend-mode: multiply;
     background-repeat:no-repeat;
     background-position:center center;
+    border-bottom: 1px dotted darkgreen;    
 }
 
 footer {
@@ -58,6 +60,7 @@ background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/49240/ui8-ale
     background-repeat: no-repeat;
     background-position: right center;
     opacity: .9;
+    border-top: 3px double white;
 }
 
 footer div p {
@@ -80,6 +83,8 @@ footer div button {
 footer div button:hover {
     background: red;
     text-decoration:none;
+    opacity: 1 !important;
+
 }
 
 
