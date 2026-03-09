@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 
 type FooterModalKey = "acp" | "evervault" | "about";
@@ -15,6 +16,11 @@ interface FooterModalEntry {
   label: string;
   title: string;
   sections: FooterModalSection[];
+}
+
+interface FooterRouteEntry {
+  label: string;
+  href: string;
 }
 
 const footerEntries: FooterModalEntry[] = [
@@ -83,10 +89,22 @@ const footerEntries: FooterModalEntry[] = [
   },
 ];
 
+const footerRouteEntries: FooterRouteEntry[] = [
+  {
+    label: "Metrics",
+    href: "/metrics",
+  },
+  {
+    label: "Vault",
+    href: "/vault",
+  },
+];
+
 const footerLinkClassName =
   "transition-opacity hover:opacity-100 hover:underline underline-offset-4";
 
 export default function Footer() {
+  const router = useRouter();
   const [activeModal, setActiveModal] = useState<FooterModalKey | null>(null);
   const activeEntry = footerEntries.find((entry) => entry.key === activeModal) ?? null;
 
@@ -104,6 +122,18 @@ export default function Footer() {
                 <button
                   type="button"
                   onClick={() => setActiveModal(entry.key)}
+                  className={footerLinkClassName}
+                >
+                  {entry.label}
+                </button>
+              </Fragment>
+            ))}
+            {footerRouteEntries.map((entry) => (
+              <Fragment key={entry.href}>
+                <span aria-hidden="true">&middot;</span>
+                <button
+                  type="button"
+                  onClick={() => router.push(entry.href)}
                   className={footerLinkClassName}
                 >
                   {entry.label}
