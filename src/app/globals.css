@@ -35,13 +35,13 @@ header nav a.text-xl em {font-size:.85rem;font-style:normal;color:#fdf6e3 !impor
 #hero h1 {color:white}
 
 
-@media screen and (min-width: 320px) and (max-width: 768px) {
+@media screen and (min-width: 340px) and (max-width: 768px) {
   /* CSS rules for this screen range */
 #SVOH-logo {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   position:absolute;
-  top:8px;
+  top:32px;
   left:8px;
   z-index: 111;
 }
