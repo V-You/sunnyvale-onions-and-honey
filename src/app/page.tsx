@@ -15,6 +15,11 @@ export default function Home() {
       {/* hero */}
       <section id="hero" className="bg-[var(--color-green-dark)] text-[var(--color-cream)] py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
+          <img
+            src="/logo.png"
+            alt="Sunnyvale Onions & Honey logo"
+            id="SVOH-logo"
+          />
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
             Get root access to produce
           </h1>

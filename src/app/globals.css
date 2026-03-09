@@ -18,10 +18,18 @@ body {
 
 header nav a.text-xl em {display:none}
 
-#hero {
+/*#hero {
   background-image: url("/logo.png");
   background-repeat: no-repeat;
   background-position: 3% 0;
+}*/
+#SVOH-logo {
+  width: 128px;
+  height: 128px;
+  position:absolute;
+  top:200px;
+  left:2%;
+  z-index: 0;
 }
 
 #hero h1 {color:white}
