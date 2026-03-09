@@ -76,10 +76,10 @@ footer div button {
     opacity: 1 !important;
     font-size: 1rem;
     text-transform: uppercase;
-    background: maroon;
+    background: brown;
     padding: 2px 12px;
     border-radius: 18px;
-    border: 1px dashed white;    
+    border: 1px solid maroon;    
 }
 footer div button:hover {
     background: red;
