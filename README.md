@@ -197,3 +197,9 @@ curl -s http://localhost:3000/.well-known/acp.json
   - https://github.com/agentic-commerce-protocol/agentic-commerce-protocol
   - https://opascope.com/insights/ai-shopping-assistant-guide-2026-agentic-commerce-protocols/#acp-vs-ucp-comparing-ai-commerce-protocols
   - https://www.griddynamics.com/blog/agentic-payments
+
+---
+
+# See also
+
+https://www.linkedin.com/pulse/own-my-tokenized-cards-fully-pci-compliant-switch-payment-laetzer-hzioe
