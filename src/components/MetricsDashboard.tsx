@@ -24,6 +24,22 @@ function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function minimum(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return Math.min(...values);
+}
+
+function maximum(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return Math.max(...values);
+}
+
 function formatMilliseconds(value: number): string {
   return `${value.toFixed(1)} ms`;
 }
@@ -50,6 +66,37 @@ function summarizeSteps(entries: RecentTransactionEntry[]): Array<{
     .sort((left, right) => right.average_duration_ms - left.average_duration_ms);
 }
 
+function formatProcessorLabel(processor: RecentTransactionEntry["processor"]): string {
+  if (processor === "aci") {
+    return "ACI";
+  }
+
+  if (processor === "stripe") {
+    return "Stripe";
+  }
+
+  if (processor === "braintree") {
+    return "Braintree";
+  }
+
+  return processor;
+}
+
+function summarizeProcessors(entries: RecentTransactionEntry[]): Array<{
+  processor: RecentTransactionEntry["processor"];
+  count: number;
+}> {
+  const buckets = new Map<RecentTransactionEntry["processor"], number>();
+
+  entries.forEach((entry) => {
+    buckets.set(entry.processor, (buckets.get(entry.processor) ?? 0) + 1);
+  });
+
+  return [...buckets.entries()]
+    .map(([processor, count]) => ({ processor, count }))
+    .sort((left, right) => right.count - left.count);
+}
+
 export default function MetricsDashboard({ products }: { products: Product[] }) {
   const [history, setHistory] = useState<RecentTransactionEntry[]>([]);
   const [benchmarkRuns, setBenchmarkRuns] = useState<DemoBenchmarkRun[]>([]);
@@ -64,8 +111,10 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
   const instrumentedEntries = history.filter(
     (entry) => entry.payment_metrics?.total_duration_ms,
   );
-  const aciEntries = instrumentedEntries.filter((entry) => entry.processor === "aci");
-  const stripeEntries = instrumentedEntries.filter((entry) => entry.processor === "stripe");
+  const instrumentedDurations = instrumentedEntries.map(
+    (entry) => entry.payment_metrics?.total_duration_ms ?? 0,
+  );
+  const processorSummary = summarizeProcessors(instrumentedEntries);
   const latestProcessor = history[0]?.processor;
   const stepSummary = summarizeSteps(instrumentedEntries);
 
@@ -179,34 +228,25 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
       <section className="grid gap-4 md:grid-cols-3">
         {[
           {
-            label: "ACI average payment duration",
+            label: "Min authorization duration",
             value:
-              aciEntries.length > 0
-                ? formatMilliseconds(
-                    average(
-                      aciEntries.map(
-                        (entry) => entry.payment_metrics?.total_duration_ms ?? 0,
-                      ),
-                    ),
-                  )
+              instrumentedDurations.length > 0
+                ? formatMilliseconds(minimum(instrumentedDurations))
                 : "No runs yet",
           },
           {
-            label: "Stripe average payment duration",
+            label: "Max authorization duration",
             value:
-              stripeEntries.length > 0
-                ? formatMilliseconds(
-                    average(
-                      stripeEntries.map(
-                        (entry) => entry.payment_metrics?.total_duration_ms ?? 0,
-                      ),
-                    ),
-                  )
+              instrumentedDurations.length > 0
+                ? formatMilliseconds(maximum(instrumentedDurations))
                 : "No runs yet",
           },
           {
-            label: "Instrumented checkouts",
-            value: String(instrumentedEntries.length),
+            label: "Avg authorization duration",
+            value:
+              instrumentedDurations.length > 0
+                ? formatMilliseconds(average(instrumentedDurations))
+                : "No runs yet",
           },
         ].map((card) => (
           <article
@@ -227,6 +267,23 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
           <p className="mt-2 text-sm text-gray-500">
             Uses the timings recorded by successful and failed checkout attempts.
           </p>
+          {processorSummary.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-500">
+                Instrumented checkouts
+              </p>
+              <div className="space-y-2">
+                {processorSummary.map((summary) => (
+                  <div
+                    key={summary.processor}
+                    className="rounded-xl bg-[var(--color-cream)] px-4 py-3 text-sm font-medium text-[var(--color-green-dark)]"
+                  >
+                    {formatProcessorLabel(summary.processor)} ({summary.count})
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {stepSummary.length === 0 ? (
             <p className="mt-6 text-sm text-gray-500">
               No instrumented payment steps have been recorded yet.
