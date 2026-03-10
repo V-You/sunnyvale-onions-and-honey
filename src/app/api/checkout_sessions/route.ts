@@ -13,6 +13,11 @@ import { getEnv, getSessionsKV } from "@/lib/kv";
 import { resolveMerchantCustomerId } from "@/lib/merchant-customers";
 import { getMerchantSavedPaymentMethods } from "@/lib/merchant-saved-payment-methods";
 import { getProductEffectivePriceCents } from "@/lib/product-pricing";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  getRateLimitIdentifier,
+} from "@/lib/rate-limit";
 import type {
   AcpCheckoutSessionCreateRequest,
   CheckoutSession,
@@ -63,6 +68,21 @@ export async function POST(request: NextRequest) {
       },
       CHECKOUT_SESSIONS_METHODS,
     );
+    const createRateLimit = await checkRateLimit(
+      "checkout_session_create",
+      getRateLimitIdentifier(request),
+      20,
+      60,
+    );
+    if (createRateLimit.limited) {
+      return acpJson(
+        { error: "Too many checkout session requests. Slow down and try again soon." },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(createRateLimit),
+        },
+      );
+    }
   const authResponse = requireAcpAuth(request, env, CHECKOUT_SESSIONS_METHODS);
   if (authResponse) {
     authResponse.headers.set(ACP_VERSION_HEADER, apiVersion);

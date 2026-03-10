@@ -1,7 +1,7 @@
 import type { DemoBenchmarkRun } from "./types";
 
 const STORAGE_KEY = "demo-benchmark-runs";
-const MAX_RUNS = 10;
+const MAX_RUNS = 11;
 
 function isDemoBenchmarkRun(value: unknown): value is DemoBenchmarkRun {
   if (!value || typeof value !== "object") {

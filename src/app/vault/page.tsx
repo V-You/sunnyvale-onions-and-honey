@@ -2,9 +2,12 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { listMerchantVaultRecords } from "@/lib/merchant-vault";
+import type { MerchantVaultRecord } from "@/lib/types";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
+
+const PUBLIC_VAULT_RECORD_LIMIT = 11;
 
 function formatDate(timestamp: number): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -13,14 +16,37 @@ function formatDate(timestamp: number): string {
   }).format(timestamp);
 }
 
+function maskCardholderDigits(value: string): string {
+  return value.replace(/\d/g, "X");
+}
+
+function sanitizeVaultRecordForPublicDisplay(
+  vaultRecord: MerchantVaultRecord,
+): MerchantVaultRecord {
+  const cardHolder = vaultRecord.ciphertext_record.card_holder;
+
+  if (!cardHolder) {
+    return vaultRecord;
+  }
+
+  return {
+    ...vaultRecord,
+    ciphertext_record: {
+      ...vaultRecord.ciphertext_record,
+      card_holder: maskCardholderDigits(cardHolder),
+    },
+  };
+}
+
 export default async function MerchantVaultPage({
   searchParams,
 }: {
   searchParams: Promise<{ record?: string }>;
 }) {
   const { record } = await searchParams;
-  const records = await listMerchantVaultRecords(25);
-  const orderedRecords = [...records].sort((left, right) => {
+  const records = await listMerchantVaultRecords(PUBLIC_VAULT_RECORD_LIMIT);
+  const publicRecords = records.map(sanitizeVaultRecordForPublicDisplay);
+  const orderedRecords = [...publicRecords].sort((left, right) => {
     if (record && left.id === record) {
       return -1;
     }
@@ -46,6 +72,9 @@ export default async function MerchantVaultPage({
             </h1>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--color-brown)]">
               This page shows the merchant-side Evervault ciphertext records retained by the demo after checkout completion. The record includes encrypted card fields that the merchant can store and route later. CVV is intentionally excluded from the stored payload.
+            </p>
+            <p className="mt-3 text-xs uppercase tracking-[0.18em] text-gray-500">
+              Showing the latest {PUBLIC_VAULT_RECORD_LIMIT} records
             </p>
           </section>
 

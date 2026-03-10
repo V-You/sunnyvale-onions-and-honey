@@ -2,7 +2,7 @@ import type { RecentTransactionEntry } from "./types";
 
 const STORAGE_KEY = "transaction-history";
 const MAX_HISTORY_AGE_MS = 24 * 60 * 60 * 1000;
-const MAX_HISTORY_ENTRIES = 12;
+const MAX_HISTORY_ENTRIES = 11;
 
 function isRecentTransactionEntry(value: unknown): value is RecentTransactionEntry {
   if (!value || typeof value !== "object") {

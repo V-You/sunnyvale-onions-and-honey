@@ -2,6 +2,11 @@ import { NextRequest } from "next/server";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { getEnv } from "@/lib/kv";
 import { queryProcessorByTransactionId } from "@/lib/processor-query";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  getRateLimitIdentifier,
+} from "@/lib/rate-limit";
 import type { Env, PSPName } from "@/lib/types";
 
 export const runtime = "edge";
@@ -17,6 +22,24 @@ export async function GET(
   const { processor, transactionId } = await params;
   const env = getEnv();
   const origin = request.headers.get("origin");
+  const lookupRateLimit = await checkRateLimit(
+    "processor_transaction",
+    getRateLimitIdentifier(request),
+    60,
+    60,
+  );
+  if (lookupRateLimit.limited) {
+    return corsJson(
+      origin,
+      env,
+      { error: "Too many processor lookup requests. Slow down and try again soon." },
+      {
+        status: 429,
+        headers: createRateLimitHeaders(lookupRateLimit),
+      },
+      PROCESSOR_TRANSACTION_METHODS,
+    );
+  }
 
   if (!transactionId) {
     return corsJson(

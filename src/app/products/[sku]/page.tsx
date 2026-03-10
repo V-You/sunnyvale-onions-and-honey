@@ -19,6 +19,15 @@ interface Props {
   params: Promise<{ sku: string }>;
 }
 
+function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sku } = await params;
   const product = getProductBySku(sku);
@@ -66,7 +75,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
       <main className="flex-1 py-12 px-6">

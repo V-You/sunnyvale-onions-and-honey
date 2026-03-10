@@ -25,6 +25,11 @@ import { routeToPSP } from "@/lib/psp-router";
 import { requireAcpAuth } from "@/lib/acp-auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { resolveMerchantSavedPaymentMethod } from "@/lib/merchant-saved-payment-methods";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  getRateLimitIdentifier,
+} from "@/lib/rate-limit";
 import type {
   AcpCheckoutSessionCompleteRequest,
   AcpTokenCredential,
@@ -230,6 +235,21 @@ export async function POST(
       },
       CHECKOUT_COMPLETE_METHODS,
     );
+    const completeRateLimit = await checkRateLimit(
+      "checkout_session_complete",
+      getRateLimitIdentifier(request),
+      20,
+      60,
+    );
+    if (completeRateLimit.limited) {
+      return acpJson(
+        { error: "Too many checkout completion requests. Slow down and try again soon." },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(completeRateLimit),
+        },
+      );
+    }
   const authResponse = requireAcpAuth(request, env, CHECKOUT_COMPLETE_METHODS);
   if (authResponse) {
     authResponse.headers.set(ACP_VERSION_HEADER, apiVersion);
