@@ -875,7 +875,7 @@ export default function CheckoutForm(
       >
         {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)} `}
         <span style={{ fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
-          (There will be no real-life payment because this is a test shop only)
+          (No real-life payments will be processed. This payment will be sent to {formatActiveProcessorLabel(activeProcessor)}'s sandbox, which will return a simulated response.)
         </span>
       </button>
     </form>
