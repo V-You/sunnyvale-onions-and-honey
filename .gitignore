@@ -7,6 +7,7 @@ Sunnyvale-OH*.md
 *.code-workspace
 tmp/
 md/
+md/*
 
 # Node / Next.js
 node_modules/
