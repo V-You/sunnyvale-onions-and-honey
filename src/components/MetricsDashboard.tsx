@@ -151,11 +151,11 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
             <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-brown-light)]">
-              Demo instrumentation
+              Metrics
             </p>
             <h1 className="text-4xl font-bold tracking-tight">Checkout timing lab</h1>
             <p className="max-w-2xl text-[var(--color-brown)]">
-              This dashboard combines real payment timing captured during checkout with repeatable API probe runs for product feed and checkout session throughput.
+              This dashboard shows two metrics: Real authorization timing captured during shopping events (Relay and PSP round trips, not shopper journey), and repeatable checkout probe runs (measures storefront/API responsiveness to establish a baseline).
             </p>
           </div>
 
@@ -223,7 +223,7 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold">Relay timing by step</h2>
+          <h2 className="text-xl font-semibold">External Relay and PSP timing</h2>
           <p className="mt-2 text-sm text-gray-500">
             Uses the timings recorded by successful and failed checkout attempts.
           </p>
@@ -251,9 +251,9 @@ export default function MetricsDashboard({ products }: { products: Product[] }) 
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold">Probe benchmark runs</h2>
+          <h2 className="text-xl font-semibold">Shop timing</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Replays lightweight product-feed and session-creation probes on this device.
+            Internal product-feed and session-creation probes.
           </p>
           {benchmarkRuns.length === 0 ? (
             <p className="mt-6 text-sm text-gray-500">
