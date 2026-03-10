@@ -29,7 +29,7 @@ export interface CartItem {
   price_cents: number;
 }
 
-export type PSPName = "aci" | "stripe";
+export type PSPName = "aci" | "stripe" | "braintree";
 export type PaymentFlowName =
   | "card"
   | "saved_evervault"
@@ -525,11 +525,15 @@ export interface Env {
   EV_APP_ID: string;
   ACI_RELAY_DOMAIN: string;
   STRIPE_RELAY_DOMAIN: string;
+  BRAINTREE_RELAY_DOMAIN: string;
   ACTIVE_PSP: string;
   ACP_API_KEYS: string;
   ACI_ENTITY_ID: string;
   ACI_TOKEN: string;
   STRIPE_SECRET_KEY: string;
+  BRAINTREE_MERCHANT_ID: string;
+  BRAINTREE_PUBLIC_KEY: string;
+  BRAINTREE_PRIVATE_KEY: string;
   SESSIONS: unknown;
   ALLOWED_ORIGINS: string;
 }

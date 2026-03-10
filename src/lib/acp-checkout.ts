@@ -30,7 +30,11 @@ const SUPPORTED_CARD_FUNDING_TYPES: Array<"credit" | "debit"> = [
 ];
 
 function normalizeProcessor(activeProcessor: string | undefined): PSPName {
-  return activeProcessor === "stripe" ? "stripe" : "aci";
+  if (activeProcessor === "stripe" || activeProcessor === "braintree") {
+    return activeProcessor;
+  }
+
+  return "aci";
 }
 
 function normalizeInterventionCapabilities(

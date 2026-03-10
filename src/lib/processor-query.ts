@@ -5,6 +5,55 @@ import type {
 } from "./types";
 
 const ACI_QUERY_BASE_URL = "https://eu-test.oppwa.com";
+const BRAINTREE_QUERY_BASE_URL = "https://api.sandbox.braintreegateway.com";
+
+function getXmlTagValue(xml: string, tagName: string): string | undefined {
+  const match = xml.match(
+    new RegExp(`<${tagName}(?: [^>]*)?>([\\s\\S]*?)</${tagName}>`),
+  );
+
+  return match?.[1]?.trim();
+}
+
+function getBraintreeTransactionXml(xml: string): string {
+  const match = xml.match(/<transaction>([\s\S]*?)<\/transaction>/);
+
+  return match?.[1] ?? xml;
+}
+
+function extractBraintreeTransaction(payload: unknown) {
+  const xml = typeof payload === "string" ? getBraintreeTransactionXml(payload) : "";
+
+  return {
+    id: getXmlTagValue(xml, "id"),
+    orderId: getXmlTagValue(xml, "order-id"),
+    status: getXmlTagValue(xml, "status"),
+    processorResponseCode: getXmlTagValue(xml, "processor-response-code"),
+    processorResponseText: getXmlTagValue(xml, "processor-response-text"),
+    gatewayRejectionReason: getXmlTagValue(xml, "gateway-rejection-reason"),
+  };
+}
+
+function extractBraintreeSearchIds(payload: unknown): string[] {
+  if (typeof payload !== "string") {
+    return [];
+  }
+
+  const idsSection = payload.match(/<ids(?: [^>]*)?>([\s\S]*?)<\/ids>/);
+  if (!idsSection) {
+    return [];
+  }
+
+  return [...idsSection[1].matchAll(/<item>([^<]+)<\/item>/g)].map(
+    (match) => match[1],
+  );
+}
+
+function createBraintreeAuthHeader(env: Env): string {
+  return `Basic ${btoa(
+    `${env.BRAINTREE_PUBLIC_KEY}:${env.BRAINTREE_PRIVATE_KEY}`,
+  )}`;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -26,6 +75,15 @@ async function readProcessorResponse(response: Response): Promise<unknown> {
 
 function getMessage(payload: unknown, fallback: string): string {
   if (typeof payload === "string" && payload.trim()) {
+    if (payload.trim().startsWith("<")) {
+      return (
+        getXmlTagValue(payload, "message") ??
+        getXmlTagValue(payload, "processor-response-text") ??
+        getXmlTagValue(payload, "gateway-rejection-reason") ??
+        fallback
+      );
+    }
+
     return payload;
   }
 
@@ -52,6 +110,86 @@ function getMessage(payload: unknown, fallback: string): string {
   }
 
   return fallback;
+}
+
+function buildBraintreePayload(
+  requestedReference: string,
+  lookupMode: ProcessorQueryLookupMode,
+  response: Response,
+  transactionBody: unknown,
+  responseBody: unknown,
+  matchedTransactionIds?: string[],
+): { status: number; payload: ProcessorQueryResponse } {
+  const transaction = extractBraintreeTransaction(transactionBody);
+  const noMatches =
+    lookupMode === "merchant_transaction_id" &&
+    response.ok &&
+    (matchedTransactionIds?.length ?? 0) === 0;
+
+  return {
+    status: noMatches ? 404 : response.ok ? 200 : response.status,
+    payload: {
+      success: response.ok && !noMatches,
+      processor: "braintree",
+      transaction_id: requestedReference,
+      merchant_transaction_id:
+        transaction.orderId ??
+        (lookupMode === "merchant_transaction_id"
+          ? requestedReference
+          : undefined),
+      psp_transaction_id:
+        transaction.id ?? matchedTransactionIds?.[0] ?? requestedReference,
+      queried_at: Date.now(),
+      lookup_mode: lookupMode,
+      match_count:
+        lookupMode === "merchant_transaction_id"
+          ? matchedTransactionIds?.length ?? 0
+          : undefined,
+      matched_transaction_ids:
+        lookupMode === "merchant_transaction_id" &&
+        matchedTransactionIds &&
+        matchedTransactionIds.length > 0
+          ? matchedTransactionIds
+          : undefined,
+      status: transaction.status,
+      result_code:
+        transaction.processorResponseCode ?? transaction.status ?? undefined,
+      result_description:
+        transaction.processorResponseText ??
+        transaction.gatewayRejectionReason ??
+        undefined,
+      response_body: responseBody,
+      message: noMatches
+        ? "No Braintree transactions matched this merchant transaction id"
+        : response.ok
+          ? undefined
+          : getMessage(
+              transactionBody,
+              `Braintree query failed with HTTP ${response.status}`,
+            ),
+    },
+  };
+}
+
+async function fetchBraintreeTransaction(
+  env: Env,
+  transactionId: string,
+): Promise<{ response: Response; body: unknown }> {
+  const response = await fetch(
+    `${BRAINTREE_QUERY_BASE_URL}/merchants/${encodeURIComponent(env.BRAINTREE_MERCHANT_ID)}/transactions/${encodeURIComponent(transactionId)}`,
+    {
+      headers: {
+        Authorization: createBraintreeAuthHeader(env),
+        "X-ApiVersion": "6",
+        Accept: "application/xml",
+      },
+    },
+  );
+
+  return {
+    response,
+    body: await readProcessorResponse(response),
+  };
 }
 
 function extractRecordArray(payload: unknown): Record<string, unknown>[] {
@@ -222,7 +360,7 @@ function buildStripePayload(
 
 export async function queryProcessorByTransactionId(
   env: Env,
-  processor: "aci" | "stripe",
+  processor: "aci" | "stripe" | "braintree",
   transactionId: string,
 ): Promise<{ status: number; payload: ProcessorQueryResponse }> {
   if (processor === "aci") {
@@ -262,6 +400,36 @@ export async function queryProcessorByTransactionId(
             error instanceof Error
               ? error.message
               : "ACI query request failed before a response was received",
+        },
+      };
+    }
+  }
+
+  if (processor === "braintree") {
+    try {
+      const result = await fetchBraintreeTransaction(env, transactionId);
+      return buildBraintreePayload(
+        transactionId,
+        "psp_transaction_id",
+        result.response,
+        result.body,
+        result.body,
+      );
+    } catch (error) {
+      return {
+        status: 502,
+        payload: {
+          success: false,
+          processor: "braintree",
+          transaction_id: transactionId,
+          psp_transaction_id: transactionId,
+          queried_at: Date.now(),
+          lookup_mode: "psp_transaction_id",
+          response_body: null,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Braintree query request failed before a response was received",
         },
       };
     }
@@ -308,7 +476,7 @@ export async function queryProcessorByTransactionId(
 
 export async function queryProcessorByMerchantTransactionId(
   env: Env,
-  processor: "aci" | "stripe",
+  processor: "aci" | "stripe" | "braintree",
   merchantTransactionId: string,
 ): Promise<{ status: number; payload: ProcessorQueryResponse }> {
   if (processor === "aci") {
@@ -349,6 +517,100 @@ export async function queryProcessorByMerchantTransactionId(
             error instanceof Error
               ? error.message
               : "ACI merchant transaction query failed before a response was received",
+        },
+      };
+    }
+  }
+
+  if (processor === "braintree") {
+    try {
+      const searchResponse = await fetch(
+        `${BRAINTREE_QUERY_BASE_URL}/merchants/${encodeURIComponent(env.BRAINTREE_MERCHANT_ID)}/transactions/advanced_search_ids`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: createBraintreeAuthHeader(env),
+            "X-ApiVersion": "6",
+            Accept: "application/xml",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            search: {
+              order_id: {
+                is: merchantTransactionId,
+              },
+            },
+          }),
+        },
+      );
+
+      const searchBody = await readProcessorResponse(searchResponse);
+      const matchedTransactionIds = extractBraintreeSearchIds(searchBody);
+
+      if (!searchResponse.ok || matchedTransactionIds.length === 0) {
+        return {
+          status:
+            searchResponse.ok && matchedTransactionIds.length === 0
+              ? 404
+              : searchResponse.status,
+          payload: {
+            success: false,
+            processor: "braintree",
+            transaction_id: merchantTransactionId,
+            merchant_transaction_id: merchantTransactionId,
+            psp_transaction_id:
+              matchedTransactionIds[0] ?? merchantTransactionId,
+            queried_at: Date.now(),
+            lookup_mode: "merchant_transaction_id",
+            match_count: matchedTransactionIds.length,
+            matched_transaction_ids:
+              matchedTransactionIds.length > 0
+                ? matchedTransactionIds
+                : undefined,
+            response_body: searchBody,
+            message:
+              searchResponse.ok && matchedTransactionIds.length === 0
+                ? "No Braintree transactions matched this merchant transaction id"
+                : getMessage(
+                    searchBody,
+                    `Braintree merchant transaction query failed with HTTP ${searchResponse.status}`,
+                  ),
+          },
+        };
+      }
+
+      const transactionResult = await fetchBraintreeTransaction(
+        env,
+        matchedTransactionIds[0],
+      );
+
+      return buildBraintreePayload(
+        merchantTransactionId,
+        "merchant_transaction_id",
+        transactionResult.response,
+        transactionResult.body,
+        {
+          search_response: searchBody,
+          transaction_response: transactionResult.body,
+        },
+        matchedTransactionIds,
+      );
+    } catch (error) {
+      return {
+        status: 502,
+        payload: {
+          success: false,
+          processor: "braintree",
+          transaction_id: merchantTransactionId,
+          merchant_transaction_id: merchantTransactionId,
+          psp_transaction_id: merchantTransactionId,
+          queried_at: Date.now(),
+          lookup_mode: "merchant_transaction_id",
+          response_body: null,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Braintree merchant transaction query failed before a response was received",
         },
       };
     }

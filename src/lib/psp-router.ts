@@ -2,6 +2,7 @@ import type {
   CardPaymentMethod,
   CheckoutSession,
   PaymentMethod,
+  PSPName,
   PSPResult,
   SavedEvervaultPaymentMethod,
   StripeSharedPaymentTokenMethod,
@@ -10,6 +11,14 @@ import type {
 
 const ACI_SUCCESS_CODE_REGEX =
   /^(000\.000\.|000\.100\.1|000\.[36]|000\.400\.1(?:10|20))/;
+
+const BRAINTREE_SUCCESS_STATUSES = new Set([
+  "authorized",
+  "submitted_for_settlement",
+  "settlement_pending",
+  "settling",
+  "settled",
+]);
 
 async function readGatewayResponse(response: Response): Promise<{
   body: unknown;
@@ -65,6 +74,62 @@ function getErrorMessage(body: unknown, fallback: string): string {
   }
 
   return fallback;
+}
+
+function normalizeProcessor(activeProcessor: string | undefined): PSPName {
+  if (activeProcessor === "stripe" || activeProcessor === "braintree") {
+    return activeProcessor;
+  }
+
+  return "aci";
+}
+
+function getXmlTagValue(xml: string, tagName: string): string | undefined {
+  const match = xml.match(
+    new RegExp(`<${tagName}(?: [^>]*)?>([\\s\\S]*?)</${tagName}>`),
+  );
+
+  return match?.[1]?.trim();
+}
+
+function getBraintreeTransactionXml(xml: string): string {
+  const match = xml.match(/<transaction>([\s\S]*?)<\/transaction>/);
+
+  return match?.[1] ?? xml;
+}
+
+function readBraintreeTransaction(xml: string) {
+  const transactionXml = getBraintreeTransactionXml(xml);
+
+  return {
+    id: getXmlTagValue(transactionXml, "id"),
+    status: getXmlTagValue(transactionXml, "status"),
+    processorResponseCode: getXmlTagValue(
+      transactionXml,
+      "processor-response-code",
+    ),
+    processorResponseText: getXmlTagValue(
+      transactionXml,
+      "processor-response-text",
+    ),
+    gatewayRejectionReason: getXmlTagValue(
+      transactionXml,
+      "gateway-rejection-reason",
+    ),
+  };
+}
+
+function getBraintreeErrorMessage(body: unknown, fallback: string): string {
+  if (typeof body === "string" && body.trim()) {
+    return (
+      getXmlTagValue(body, "message") ??
+      getXmlTagValue(body, "processor-response-text") ??
+      getXmlTagValue(body, "gateway-rejection-reason") ??
+      fallback
+    );
+  }
+
+  return getErrorMessage(body, fallback);
 }
 
 function isEncryptedCardPaymentMethod(
@@ -128,7 +193,7 @@ export async function routeToPSP(
   session: CheckoutSession,
   paymentMethod: PaymentMethod,
 ): Promise<PSPResult> {
-  const psp = env.ACTIVE_PSP || "aci";
+  const psp = normalizeProcessor(env.ACTIVE_PSP);
 
   if (psp === "stripe") {
     if (paymentMethod.type === "stripe_spt") {
@@ -139,12 +204,16 @@ export async function routeToPSP(
     }
   }
 
+  if (psp === "braintree" && isEncryptedCardPaymentMethod(paymentMethod)) {
+    return routeToBraintree(env, session, paymentMethod);
+  }
+
   if (paymentMethod.type === "stripe_spt") {
     return {
       success: false,
       order_id: "",
       psp_transaction_id: "",
-      processor: psp === "stripe" ? "stripe" : "aci",
+      processor: psp,
       payment_flow: "stripe_spt",
       merchant_transaction_id: session.merchant_transaction_id ?? session.id,
       error:
@@ -157,7 +226,7 @@ export async function routeToPSP(
       success: false,
       order_id: "",
       psp_transaction_id: "",
-      processor: psp === "stripe" ? "stripe" : "aci",
+      processor: psp,
       payment_flow: paymentMethod.type,
       merchant_transaction_id: session.merchant_transaction_id ?? session.id,
       error:
@@ -166,6 +235,114 @@ export async function routeToPSP(
   }
 
   return routeToACI(env, session, paymentMethod);
+}
+
+async function routeToBraintree(
+  env: Env,
+  session: CheckoutSession,
+  paymentMethod: CardPaymentMethod | SavedEvervaultPaymentMethod,
+): Promise<PSPResult> {
+  const startedAt = Date.now();
+  const merchantTransactionId = session.merchant_transaction_id ?? session.id;
+  const authHeader = `Basic ${btoa(
+    `${env.BRAINTREE_PUBLIC_KEY}:${env.BRAINTREE_PRIVATE_KEY}`,
+  )}`;
+  const pm = getEncryptedCardData(paymentMethod);
+  const requestBody = {
+    transaction: {
+      type: "sale",
+      amount: (session.amount_total_cents / 100).toFixed(2),
+      order_id: merchantTransactionId,
+      credit_card: {
+        number: pm.card_number,
+        expiration_month: pm.expiry_month,
+        expiration_year: pm.expiry_year,
+        cvv: pm.cvv,
+        ...(pm.card_holder ? { cardholder_name: pm.card_holder } : {}),
+      },
+      options: {
+        submit_for_settlement: true,
+      },
+    },
+  };
+
+  let response: Response;
+  let requestStartedAt = Date.now();
+
+  try {
+    response = await fetch(
+      `https://${env.BRAINTREE_RELAY_DOMAIN}/merchants/${encodeURIComponent(env.BRAINTREE_MERCHANT_ID)}/transactions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: authHeader,
+          "X-ApiVersion": "6",
+          Accept: "application/xml",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      },
+    );
+  } catch (error) {
+    return {
+      success: false,
+      order_id: "",
+      psp_transaction_id: "",
+      processor: "braintree",
+      payment_flow: paymentMethod.type,
+      payment_metrics: createPaymentMetrics(startedAt, [
+        {
+          name: "braintree_transaction",
+          started_at: requestStartedAt,
+          ended_at: Date.now(),
+        },
+      ]),
+      merchant_transaction_id: merchantTransactionId,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Braintree relay request failed before a response was received",
+    };
+  }
+
+  const { body } = await readGatewayResponse(response);
+  const transaction =
+    typeof body === "string" ? readBraintreeTransaction(body) : null;
+  const transactionId = transaction?.id ?? "";
+  const transactionStatus = transaction?.status;
+  const success =
+    response.ok &&
+    typeof transactionStatus === "string" &&
+    BRAINTREE_SUCCESS_STATUSES.has(transactionStatus);
+
+  return {
+    success,
+    order_id: transactionId,
+    psp_transaction_id: transactionId,
+    processor: "braintree",
+    payment_flow: paymentMethod.type,
+    payment_metrics: createPaymentMetrics(startedAt, [
+      {
+        name: "braintree_transaction",
+        started_at: requestStartedAt,
+        ended_at: Date.now(),
+      },
+    ]),
+    merchant_transaction_id: merchantTransactionId,
+    result_code:
+      transaction?.processorResponseCode ?? transaction?.status ?? undefined,
+    result_description:
+      transaction?.processorResponseText ??
+      transaction?.gatewayRejectionReason ??
+      undefined,
+    response_body: body,
+    error: success
+      ? undefined
+      : getBraintreeErrorMessage(
+          body,
+          `Braintree transaction failed with HTTP ${response.status}`,
+        ),
+  };
 }
 
 async function routeToACI(

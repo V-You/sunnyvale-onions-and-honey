@@ -14,7 +14,9 @@ function isRecentTransactionEntry(value: unknown): value is RecentTransactionEnt
   return (
     typeof entry.history_id === "string" &&
     (entry.status === "completed" || entry.status === "failed") &&
-    (entry.processor === "aci" || entry.processor === "stripe") &&
+    (entry.processor === "aci" ||
+      entry.processor === "stripe" ||
+      entry.processor === "braintree") &&
     typeof entry.amount_total_cents === "number" &&
     typeof entry.currency === "string" &&
     Array.isArray(entry.items) &&

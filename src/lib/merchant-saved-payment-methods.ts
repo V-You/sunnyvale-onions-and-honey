@@ -160,7 +160,11 @@ const MERCHANT_CUSTOMER_SAVED_PAYMENT_RECORDS: MerchantCustomerSavedPaymentRecor
 ];
 
 function normalizeProcessor(activeProcessor: string | undefined): PSPName {
-  return activeProcessor === "stripe" ? "stripe" : "aci";
+  if (activeProcessor === "stripe" || activeProcessor === "braintree") {
+    return activeProcessor;
+  }
+
+  return "aci";
 }
 
 function isRecordAvailable(

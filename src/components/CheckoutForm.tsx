@@ -155,7 +155,15 @@ function formatSavedPaymentLabel(record: SavedEvervaultPaymentRecord): string {
 }
 
 function formatActiveProcessorLabel(processor: PSPName): string {
-  return processor === "stripe" ? "Stripe" : "ACI";
+  if (processor === "stripe") {
+    return "Stripe";
+  }
+
+  if (processor === "braintree") {
+    return "Braintree";
+  }
+
+  return "ACI";
 }
 
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
@@ -221,7 +229,11 @@ export default function CheckoutForm(
     }
 
     const result = payload as CheckoutCompleteResponse;
-    if (result.processor !== "aci" && result.processor !== "stripe") {
+    if (
+      result.processor !== "aci" &&
+      result.processor !== "stripe" &&
+      result.processor !== "braintree"
+    ) {
       return;
     }
 

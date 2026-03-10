@@ -31,7 +31,11 @@ export async function GET(
     );
   }
 
-  if (processor !== "aci" && processor !== "stripe") {
+  if (
+    processor !== "aci" &&
+    processor !== "stripe" &&
+    processor !== "braintree"
+  ) {
     return corsJson(
       origin,
       env,
