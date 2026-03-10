@@ -821,7 +821,7 @@ export default function CheckoutForm(
 
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <div className="space-y-3">
-          <h2 className="font-semibold text-lg">Payment details</h2>
+          <h2 className="font-semibold text-lg">Payment details (Reminder: This is a fake shop)</h2>
           <p className="text-sm text-gray-500">
             Active processor: {formatActiveProcessorLabel(activeProcessor)}
           </p>
@@ -873,7 +873,10 @@ export default function CheckoutForm(
         disabled={isSubmitDisabled()}
         className="w-full py-3 rounded-lg font-semibold text-white bg-[var(--color-green-dark)] hover:bg-[var(--color-green-mid)] transition-colors disabled:opacity-60"
       >
-        {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)}`}
+        {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)} `}
+        <span style={{ fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
+          (There will be no real-life payment because this is a test shop only)
+        </span>
       </button>
     </form>
   );
