@@ -48,7 +48,7 @@ header {
     background-image: url(https://picsum.photos/g/2000/1200?image=443);
     background-color: #1a3a2a;
     background-blend-mode: multiply;
-    background-repeat:no-repeat;
+    background-repeat:repeat;
     background-position:center center;
     border-bottom: 1px dotted darkgreen;    
 }
