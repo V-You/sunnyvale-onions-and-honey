@@ -1,65 +1,69 @@
-# Sunnyvale PayRam pivot notes (2026-06-09)
+# Sunnyvale PayRam notes (2026-06-09)
 
-## Why this file exists
+- Sunnyvale pivot from Evervault-first checkout to a PayRam Operator showcase
+- Use as source of truth when resuming work
 
-This file is a short, resume-friendly record of the Sunnyvale pivot from Evervault-first checkout to a PayRam Operator showcase. Use it as the current source of truth when resuming work.
-
-## What we verified about the current codebase
+## Codebase verification run
 
 - Stack: Next.js 15 + React 19 + TypeScript, deployed to Cloudflare Pages (`@cloudflare/next-on-pages`).
 - Checkout UI entry point: `src/app/checkout/page.tsx` renders `CheckoutForm`.
 - Current checkout implementation: `src/components/CheckoutForm.tsx` uses `@evervault/react` (`EvervaultProvider` + `Card`) and posts to ACP checkout session APIs.
 - Current backend payment execution: `src/app/api/checkout_sessions/[id]/complete/route.ts` calls `routeToPSP` from `src/lib/psp-router.ts`.
-- Current PSP switch: `ACTIVE_PSP` supports `aci`, `stripe`, and `braintree` (plus related env bindings in `src/lib/types.ts` and `src/lib/kv.ts`).
+- Current PSP switch: `ACTIVE_PSP` supports `aci`, `stripe`, and `braintree` (plus related env bindings in `src/lib/types.ts` and `src/lib/kv.ts`). These relate to the "New card" and "Saved card" buttons in the checkout form.
 
 ## External PayRam context used for this pivot
 
-- Operator mode is multi-merchant and reference-driven (`reference_id`, `merchant_id`) with webhook-based reconciliation (`payment.confirmed`).
-- PayRam provides hosted/embedded and headless integration paths, and promotes operator-owned infrastructure under your own domain.
-- Testing docs confirm payment link and confirmation workflows, including operational troubleshooting when deposit addresses are not generated.
+- PayRam is API-first operator software, not a browser widget library.
+- The PayRam TS/JS SDK is server-side npm-based, not a lib or script tag.
+- PayRam operator mode is multi-merchant and reference-driven (`reference_id`, `merchant_id`) with webhook-based reconciliation (`payment.confirmed`).
+- PayRam supports hosted checkout and payment-link style flows.
+- PayRam is suited for backend-driven storefront redirect.
+- PayRam is not suited for direct browser card collection.
 
-## Decision summary
+## Decisions
 
-We will pivot Sunnyvale checkout to showcase PayRam, while preserving existing Evervault/Braintree code so we can switch back quickly.
+We are adding PayRam to Sunnyvale's checkout, while preserving existing Evervault/Braintree code.
 
-### Decision 1 - frontend SDK loading
+### No browser PayRam SDK
 
-Add the PayRam browser SDK script on the checkout page:
+Do not load a public PayRam browser script in the storefront. The storefront should not try to act as the PayRam SDK host.
 
-```html
-<script src="https://cdn.payram.com/sdk/v3/payram.min.js"></script>
-```
+### Backend-driven PayRam checkout
 
-Scope: checkout page only.
-
-### Decision 2 - headless create-payment flow
-
-Add a server route that calls the PayRam Operator endpoint (as in the blueprint):
+Use a Sunnyvale backend route to call the PayRam Operator and return a hosted checkout URL or redirect target to the browser.
 
 - Operator base example: `https://payram.laetzer.com`
-- Create payment example: `/api/v3/payments/create_payment`
-- Auth: bearer key from server-side env
+- Operator route example: `/api/v3/payments/create_payment`
+- Auth: bearer key from server-side env only
 - Include structured `reference_id` and `metadata` for telemetry and reconciliation
+- Frontend behavior: click button, POST to Sunnyvale backend, redirect to returned PayRam URL
 
-### Decision 3 - submit-time card-to-crypto execution
+### Preserve the Evervault card rail
 
-On checkout submit, call PayRam headless/onramp execution with the payment token returned by the backend, then transition UI to processing/pending state until confirmation.
+Keep the existing Evervault card checkout working as the normal card showcase, so the demo has a direct comparison between:
 
-## planned implementation sequence
+- a normal tokenized card payment,
+- and a PayRam-backed crypto onramp.
 
-1. Add PayRam SDK script to checkout route.
-2. Introduce a backend PayRam create-payment API adapter in Next.js.
-3. Add a PayRam checkout mode in `CheckoutForm` guarded by feature flags/env.
-4. Keep Evervault/Braintree paths available as fallback during migration.
-5. Add webhook handling for `payment.confirmed` to complete order and inventory actions.
+## Implementation sequence
 
-## open items to confirm before coding deeper
+1. Verify the current PayRam docs and context7 MCP notes before changing code.
+2. Keep or restore the Evervault card route so normal card checkout still works.
+3. Make PayRam button call a Sunnyvale backend route.
+4. Have the backend call the PayRam Operator and return a hosted checkout URL.
+5. Keep Braintree / Stripe / ACI logic intact so the storefront remains switchable.
 
-- Exact PayRam JS SDK browser API shape in v3 (`PayRam(...)`, method names, and event lifecycle) - verify against current SDK docs/changelog.
-- Final naming for env vars in this repo (proposed examples below).
-- Whether this demo settles to Base or Sepolia by default during pivot phase.
+## Open items to confirm before coding deeper
 
-## proposed environment variables
+**Resolved 2026-06-10:**
+
+- **Operator response shape:** The PayRam Operator returns a JSON body that includes a hosted checkout URL. The Sunnyvale backend route (`/api/payram/create_payment`) probes the response for `payment_url`, `checkout_url`, and `url` in that priority order. The first non-empty string is returned to the browser as `{ payment_url }`. If none is present the route returns HTTP 502 with the raw operator response for debugging.
+
+- **Redirect vs. session object:** We return a direct redirect URL. The browser does not hold a session object - it receives `payment_url` and navigates to it immediately. No client-side session state is needed because the payment lifecycle is managed on the PayRam operator side.
+
+- **Webhook-to-confirmation mapping:** Not implemented in this iteration. PayRam sends `payment.confirmed` webhooks to the operator; Sunnyvale does not currently have a webhook receiver. The cart is cleared optimistically on redirect. A future `/api/payram/webhook` route can update inventory and emit a Sunnyvale confirmation event when that is needed for the demo.
+
+## Environment variables
 
 - `PAYRAM_OPERATOR_BASE_URL`
 - `PAYRAM_MERCHANT_ID`
@@ -67,15 +71,32 @@ On checkout submit, call PayRam headless/onramp execution with the payment token
 - `PAYRAM_DEFAULT_CHAIN`
 - `PAYRAM_DEFAULT_CURRENCY`
 
+No PayRam browser SDK environment variables are required.
+
+## Correct implementation path
+
+### How to integrate the Agent Lab PayRam instance correctly into an existing shop
+
+Use this pattern when adding PayRam to a storefront that already has a normal card checkout:
+
+1. Keep the storefront card rail intact. (Example: For Sunnyvale store, that meant the Evervault checkout remained, as the normal card payment option alongside PayRam.)
+2. Let the PayRam button only start a backend request. The browser does not collect card details for PayRam and does not load a PayRam client script.
+3. Have the backend call the PayRam Operator with `PAYRAM_OPERATOR_BASE_URL`, `PAYRAM_MERCHANT_ID`, and `PAYRAM_MERCHANT_KEY`.
+4. Pass structured merchant metadata such as `reference_id`, order number, store slug, and customer identifiers through the backend request.
+5. Return a hosted checkout URL or redirect target from the backend.
+6. Redirect the browser to the PayRam-hosted experience.
+7. Receive the confirmation back in Sunnyvale through the normal success / webhook path and then update inventory, metrics, and confirmation screens.
+
+Use that same "operator-mode pattern" for any future test shops (Evevault or not, existing card rails or not): keep the storefront simple, keep the merchant key server-side, let the backend broker the PayRam session. 
+
 ## Cloudflare deployment note
 
-Because Sunnyvale is deployed through Cloudflare Pages, the PayRam variables need to be configured in the Cloudflare project settings as well as in local `.env` for development.
+Because Sunnyvale is deployed through Cloudflare Pages, the PayRam environment variables must be configured in the Cloudflare project settings and in local `.env` for development.
 
-- Server-side only: `PAYRAM_MERCHANT_KEY`
-- Browser-visible values used by the checkout page: `NEXT_PUBLIC_PAYRAM_OPERATOR_URL`, `NEXT_PUBLIC_PAYRAM_MERCHANT_ID`
-- Local development template: `.env.example`
+- Server-side only: `PAYRAM_OPERATOR_BASE_URL`, `PAYRAM_MERCHANT_ID`, `PAYRAM_MERCHANT_KEY`, `PAYRAM_DEFAULT_CHAIN`, `PAYRAM_DEFAULT_CURRENCY`
+- Local development template: `.env.example` (User: if absolutely needed, add real values to `.env`, but never `.env.example`, as the former is excluded from the public repo. Better approach: track values in a vault.)
 
-Keep the secret merchant key out of browser-exposed variables. The checkout page only needs the public operator URL and merchant ID to initialize the PayRam SDK, while the backend route uses the merchant key to call the Operator.
+Keep the PayRam merchant key out of browser-exposed variables. The storefront should only talk to its own backend route, and the backend should talk to the PayRam Operator.
 
 ## evidence
 
@@ -83,10 +104,14 @@ Keep the secret merchant key out of browser-exposed variables. The checkout page
 - `src/components/CheckoutForm.tsx`
 - `src/app/api/checkout_sessions/route.ts`
 - `src/app/api/checkout_sessions/[id]/complete/route.ts`
+- `src/app/api/payram/create_payment/route.ts`
 - `src/lib/psp-router.ts`
 - `src/lib/kv.ts`
 - `src/lib/types.ts`
 - `README.md`
 - https://www.payram.com/operator
 - https://docs.payram.com/onboarding-guide/testing-payment-links
+- https://docs.payram.com/features/payment-links
+- https://docs.payram.com/features/card-to-crypto-fiat-onramp
+- https://docs.payram.com/support/change-log
 - https://mcp.payram.com/
