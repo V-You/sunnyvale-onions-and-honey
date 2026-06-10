@@ -63,7 +63,7 @@ header {
 footer {
 background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/49240/ui8-alex-shutin-kKvQJ6rK6S4-unsplash.jpg);
     background-color: #fdf6e3;
-    background-blend-mode: difference;
+    background-blend-mode: luminosity;
     background-repeat: no-repeat;
     background-position: right center;
     border-top: 1px dashed white;
