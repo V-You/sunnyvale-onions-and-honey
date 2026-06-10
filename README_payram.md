@@ -67,6 +67,16 @@ On checkout submit, call PayRam headless/onramp execution with the payment token
 - `PAYRAM_DEFAULT_CHAIN`
 - `PAYRAM_DEFAULT_CURRENCY`
 
+## Cloudflare deployment note
+
+Because Sunnyvale is deployed through Cloudflare Pages, the PayRam variables need to be configured in the Cloudflare project settings as well as in local `.env` for development.
+
+- Server-side only: `PAYRAM_MERCHANT_KEY`
+- Browser-visible values used by the checkout page: `NEXT_PUBLIC_PAYRAM_OPERATOR_URL`, `NEXT_PUBLIC_PAYRAM_MERCHANT_ID`
+- Local development template: `.env.example`
+
+Keep the secret merchant key out of browser-exposed variables. The checkout page only needs the public operator URL and merchant ID to initialize the PayRam SDK, while the backend route uses the merchant key to call the Operator.
+
 ## evidence
 
 - `src/app/checkout/page.tsx`

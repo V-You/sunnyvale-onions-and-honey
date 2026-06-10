@@ -1,5 +1,23 @@
 import type { Metadata } from "next";
+import { Fleur_De_Leah, Niconne, Sono } from "next/font/google";
 import "./globals.css";
+
+const fleurDeLeah = Fleur_De_Leah({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-fleur-de-leah",
+});
+
+const niconne = Niconne({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-niconne",
+});
+
+const sono = Sono({
+  subsets: ["latin"],
+  variable: "--font-sono",
+});
 
 export const metadata: Metadata = {
   title: "Sunnyvale Onions & Honey",
@@ -16,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${fleurDeLeah.variable} ${niconne.variable} ${sono.variable}`}>     
       <body className="min-h-screen">{children}</body>
     </html>
   );

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Fleur+De+Leah&family=Niconne&family=Sono:wght,MONO@200..800,1&display=swap');
-
 @import "tailwindcss";
 
 :root {
@@ -11,6 +9,12 @@
   --color-brown: #78350f;
   --color-brown-light: #a3541e;
 }
+
+/* 
+--font-fleur-de-leah
+--font-niconne",
+--font-sono",
+*/
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
