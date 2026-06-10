@@ -1020,10 +1020,10 @@ export default function CheckoutForm(
 
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <div className="space-y-3">
-          <h2 className="font-semibold text-lg">Payment details (Reminder: This is a fake shop)</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="font-semibold text-lg" title="Active processor: {formatActiveProcessorLabel(activeProcessor)}">Payment details (Reminder: This is a fake shop)</h2>
+          {/*<!-- p className="text-sm text-gray-500">
             Active processor: {formatActiveProcessorLabel(activeProcessor)}
-          </p>
+          </p -->*/}
           {renderPaymentModeTabs()}
         </div>
 
