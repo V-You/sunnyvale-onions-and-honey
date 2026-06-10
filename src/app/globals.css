@@ -119,6 +119,10 @@ footer div button:hover {
 }
 
 
+/* --- */
+h2        {font-size:1rem;letter-spacing: -0.05rem;}
+
+
 @media screen and (min-width: 340px) and (max-width: 768px) {
   /* CSS rules for this screen range */
 #SVOH-logo {
