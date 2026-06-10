@@ -1085,7 +1085,7 @@ export default function CheckoutForm(
         {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)} `}
         <span style={{ fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
            {checkoutMode === "payram"
-            ? "(Demo - calls your PayRam Operator instance for card-to-crypto onramp. No real fiat charged.)"
+            ? "(DEMO: Card-to-crypto onramp. Payment in USD.)"
             : `(No real-life payments will be processed. This payment will be sent to ${formatActiveProcessorLabel(activeProcessor)}'s sandbox, which will return a simulated response.)`}
         </span>
       </button>
