@@ -17,9 +17,10 @@
 */
 
 body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sono),"Inter", system-ui, -apple-system, sans-serif;
   background-color: var(--color-cream);
   color: var(--color-green-dark);
+  font-weight:300;
 }
 
 header nav a.text-xl em {
@@ -65,8 +66,7 @@ background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/49240/ui8-ale
     background-blend-mode: difference;
     background-repeat: no-repeat;
     background-position: right center;
-    opacity: .9;
-    border-top: 3px double white;
+    border-top: 1px dashed white;
 }
 
 footer div p {
@@ -85,10 +85,9 @@ footer div button {
     background: brown;
     padding: 2px 12px;
     border-radius: 18px;
-    border: 1px solid rgb(102, 1, 1);    
 }
 footer div button:hover {
-    background: red;
+    background: var(--color-amber);
     text-decoration:none;
     opacity: 1 !important;
 
@@ -96,23 +95,26 @@ footer div button:hover {
 
 
 #SVOH-logo {
-  width: 194px;
-  height: 194px;
-  position:absolute;
-  top:111px;
-  left:22px;
-  z-index: 111;
-  box-shadow: 0px 0px 11px #000;
-  border-radius: 111px;
+    z-index: 111;
+    border-radius: 111px;
+    width: 194px;
+    height: 194px;
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    box-shadow: 0 -11px 11px #111;
 }
 
 #hero h1 {
   color:white;
   text-shadow: 0px 2px 11px rgba(0, 0, 0, 0.9);
+  font-family: var(--font-sono);
+  font-size: 3rem;
 }
 
 #hero p {
   text-shadow: 0px 1px 1px rgb(0 0 0);
+  font-family: var(--font-niconne);
 }
 
 
