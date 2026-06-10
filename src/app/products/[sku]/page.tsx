@@ -88,7 +88,7 @@ export default async function ProductDetailPage({ params }: Props) {
               priority
               sizes="(min-width: 768px) 50vw, 100vw"
               className="aspect-square rounded-2xl bg-gradient-to-br from-amber-50 to-green-50"
-              imageClassName="h-full w-full object-contain p-6"
+              imageClassName="h-full w-full object-contain"
             />
 
             {/* product info */}
