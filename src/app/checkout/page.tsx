@@ -4,6 +4,7 @@ import CheckoutForm from "@/components/CheckoutForm";
 import { getAllProducts } from "@/lib/catalog";
 import { getEnv } from "@/lib/kv";
 import type { PSPName } from "@/lib/types";
+import Script from "next/script";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,10 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Script
+        src="https://cdn.payram.com/sdk/v3/payram.min.js"
+        strategy="afterInteractive"
+      />
       <Header />
 
       <main className="flex-1 py-12 px-6">
