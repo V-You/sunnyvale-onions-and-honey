@@ -93,12 +93,21 @@ footer div button:hover {
   width: 194px;
   height: 194px;
   position:absolute;
-  top:300px;
+  top:111px;
   left:22px;
   z-index: 111;
+  box-shadow: 0px 0px 11px #000;
+  border-radius: 111px;
 }
 
-#hero h1 {color:white}
+#hero h1 {
+  color:white;
+  text-shadow: 0px 2px 11px rgba(0, 0, 0, 0.9);
+}
+
+#hero p {
+  text-shadow: 0px 1px 1px rgb(0 0 0);
+}
 
 
 @media screen and (min-width: 340px) and (max-width: 768px) {
