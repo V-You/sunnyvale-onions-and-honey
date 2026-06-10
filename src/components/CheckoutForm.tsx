@@ -456,7 +456,7 @@ export default function CheckoutForm(
       const win = window as unknown as { PayRam?: PayRamSDK };
       if (typeof win.PayRam !== "function") {
         throw new Error(
-          "PayRam SDK not loaded yet. Refresh the page and try again.",
+          "PayRam SDK not loaded. Verify NEXT_PUBLIC_PAYRAM_SDK_URL points to a resolvable script URL and that CSP allows that host.",
         );
       }
 
@@ -678,10 +678,10 @@ export default function CheckoutForm(
 
   function renderPaymentModeTabs() {
     const options: Array<{ mode: CheckoutMode; label: string; enabled: boolean }> = [
-      { mode: "card", label: "New encrypted card", enabled: true },
+      { mode: "card", label: "New card", enabled: true },
       {
         mode: "saved_evervault",
-        label: "Saved Evervault payload",
+        label: "Saved card",
         enabled: savedPayments.length > 0,
       },
     ];
@@ -689,7 +689,7 @@ export default function CheckoutForm(
     if (activeProcessor === "stripe") {
       options.push({
         mode: "stripe_spt",
-        label: "Delegated Stripe token",
+        label: "Saved card (Stripe token)",
         enabled: true,
       });
     }
@@ -697,7 +697,7 @@ export default function CheckoutForm(
       // [showcase: payram] - card-to-crypto onramp via PayRam Operator
       options.push({
         mode: "payram",
-        label: "PayRam card-to-crypto",
+        label: "Card Safe+",
         enabled: PAYRAM_CONFIGURED,
       });
 
@@ -767,7 +767,7 @@ export default function CheckoutForm(
             onChange={(event) => setRememberEncryptedCard(event.target.checked)}
             className="h-4 w-4 rounded border-[var(--color-brown)]/30"
           />
-          Save this Evervault-encrypted payload for a later demo checkout on this device.
+          Save card on file for later payments (Evervault-encrypted).
         </label>
       </>
     );

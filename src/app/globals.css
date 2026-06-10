@@ -87,9 +87,10 @@ footer div button {
     border-radius: 18px;
 }
 footer div button:hover {
-    background: var(--color-amber);
-    text-decoration:none;
-    opacity: 1 !important;
+    background: #fff;
+    text-decoration: none;
+    opacity: 1!important;
+    color:#000 !important;
 
 }
 

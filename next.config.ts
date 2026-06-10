@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const contentSecurityPolicy = [
 	"default-src 'self'",
-	"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.evervault.com https://*.evervault.com https://*.evervault.app https://cdn.payram.com",
+	"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.evervault.com https://*.evervault.com https://*.evervault.app https://*.payram.com",
 	"style-src 'self' 'unsafe-inline' https://*.evervault.com https://*.evervault.app",
 	"img-src 'self' data: blob: https:",
 	"font-src 'self' data: https:",
-	"connect-src 'self' https://api.evervault.com https://*.evervault.com https://*.evervault.app https://payram.laetzer.com https://cdn.payram.com",
+	"connect-src 'self' https://api.evervault.com https://*.evervault.com https://*.evervault.app https://*.payram.com https://payram.laetzer.com",
 	"frame-src 'self' https://*.evervault.com https://*.evervault.app",
 	"worker-src 'self' blob:",
 	"object-src 'none'",

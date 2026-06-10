@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default function CheckoutPage() {
   const products = getAllProducts();
   const env = getEnv();
+  const payramSdkUrl = process.env.NEXT_PUBLIC_PAYRAM_SDK_URL;
   const activeProcessor: PSPName =
     env.ACTIVE_PSP === "stripe" || env.ACTIVE_PSP === "braintree"
       ? env.ACTIVE_PSP
@@ -19,10 +20,9 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Script
-        src="https://cdn.payram.com/sdk/v3/payram.min.js"
-        strategy="afterInteractive"
-      />
+      {payramSdkUrl ? (
+        <Script src={payramSdkUrl} strategy="afterInteractive" />
+      ) : null}
       <Header />
 
       <main className="flex-1 py-12 px-6">
