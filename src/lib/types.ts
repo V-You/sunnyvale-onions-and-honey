@@ -521,19 +521,31 @@ export interface ProcessorQueryResponse {
 
 // worker environment bindings
 export interface Env {
+  // [showcase: evervault] - Evervault SDK and relay credentials
   EV_API_KEY: string;
   EV_APP_ID: string;
+  // [showcase: evervault] - relay domains per PSP
   ACI_RELAY_DOMAIN: string;
   STRIPE_RELAY_DOMAIN: string;
   BRAINTREE_RELAY_DOMAIN: string;
+  // [showcase: evervault] - active PSP selector (aci | stripe | braintree)
   ACTIVE_PSP: string;
   ACP_API_KEYS: string;
+  // [showcase: evervault] - ACI credentials
   ACI_ENTITY_ID: string;
   ACI_TOKEN: string;
+  // [showcase: evervault] - Stripe credentials
   STRIPE_SECRET_KEY: string;
+  // [showcase: evervault] - Braintree credentials
   BRAINTREE_MERCHANT_ID: string;
   BRAINTREE_PUBLIC_KEY: string;
   BRAINTREE_PRIVATE_KEY: string;
   SESSIONS: unknown;
   ALLOWED_ORIGINS: string;
+  // [showcase: payram] - PayRam Operator credentials and defaults
+  PAYRAM_OPERATOR_BASE_URL: string;
+  PAYRAM_MERCHANT_ID: string;
+  PAYRAM_MERCHANT_KEY: string;
+  PAYRAM_DEFAULT_CHAIN: string;
+  PAYRAM_DEFAULT_CURRENCY: string;
 }

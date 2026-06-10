@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+// [showcase: evervault] - card tokenization widget; swap this import and the
+// EvervaultProvider / Card JSX below when switching to the PayRam showcase.
 import { Card, EvervaultProvider, themes, type CardPayload } from "@evervault/react";
 import { useRouter } from "next/navigation";
 import { ACP_LATEST_API_VERSION } from "@/lib/acp-shared";
@@ -166,6 +168,8 @@ function formatActiveProcessorLabel(processor: PSPName): string {
   return "ACI";
 }
 
+// [showcase: evervault] - replace these constants with PAYRAM_CONFIGURED +
+// NEXT_PUBLIC_PAYRAM_MERCHANT_ID when switching to the PayRam showcase.
 const EVERVAULT_APP_ID = process.env.NEXT_PUBLIC_EVERVAULT_APP_ID ?? "";
 const EVERVAULT_TEAM_ID = process.env.NEXT_PUBLIC_EVERVAULT_TEAM_ID ?? "";
 const ACP_API_KEY = process.env.NEXT_PUBLIC_ACP_API_KEY ?? "";
