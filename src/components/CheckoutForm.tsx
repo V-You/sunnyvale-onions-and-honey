@@ -82,8 +82,10 @@ interface CheckoutCompleteResponse {
   };
 }
 
-type CheckoutMode = "card" | "saved_evervault" | "stripe_spt";
+type CheckoutMode = "card" | "saved_evervault" | "stripe_spt" | "payram";
 type DelegatedStripeTokenMode = "confirmation_token" | "payment_method_id";
+// [showcase: payram] - tracks the onramp submission lifecycle
+type PayRamStatus = "idle" | "processing" | "submitted";
 
 function formatTechnicalResponse(payload: unknown): string {
   if (typeof payload === "string") {
@@ -177,6 +179,12 @@ const EVERVAULT_CONFIGURED =
   EVERVAULT_APP_ID.length > 0 && EVERVAULT_TEAM_ID.length > 0;
 const ACP_CONFIGURED = ACP_API_KEY.length > 0;
 const EVERVAULT_CARD_THEME = themes.clean();
+// [showcase: payram] - operator URL and merchant ID are not secrets and can
+// be exposed to the browser. The merchant key stays server-side only.
+const PAYRAM_OPERATOR_URL = process.env.NEXT_PUBLIC_PAYRAM_OPERATOR_URL ?? "";
+const PAYRAM_MERCHANT_ID_PUBLIC = process.env.NEXT_PUBLIC_PAYRAM_MERCHANT_ID ?? "";
+const PAYRAM_CONFIGURED =
+  PAYRAM_OPERATOR_URL.length > 0 && PAYRAM_MERCHANT_ID_PUBLIC.length > 0;
 
 export default function CheckoutForm(
   {
@@ -204,6 +212,12 @@ export default function CheckoutForm(
     useState<EncryptedCardDetails | null>(null);
   const [cardPreview, setCardPreview] = useState<CardPreview | null>(null);
   const [evervaultLoadError, setEvervaultLoadError] = useState(false);
+  // [showcase: payram] - plain card field state and onramp submission status
+  const [payramCardholderName, setPayramCardholderName] = useState("");
+  const [payramCardNumber, setPayramCardNumber] = useState("");
+  const [payramExpiry, setPayramExpiry] = useState("");
+  const [payramCvc, setPayramCvc] = useState("");
+  const [payramStatus, setPayramStatus] = useState<PayRamStatus>("idle");
   const router = useRouter();
 
   useEffect(() => {
@@ -393,6 +407,95 @@ export default function CheckoutForm(
     setSelectedSavedPaymentId(record.id);
   }
 
+  // [showcase: payram] - headless card-to-crypto onramp flow.
+  // Called by handleSubmit when checkoutMode === "payram".
+  // Manages payramStatus itself; re-throws errors for handleSubmit to surface via setError.
+  async function handlePayramSubmit() {
+    try {
+      // Step B: fetch a payment intent token from the backend adapter.
+      // The adapter calls the PayRam Operator and keeps PAYRAM_MERCHANT_KEY server-side.
+      const referenceId = `sunnyvale:ord_${Date.now()}`;
+      const intentResp = await fetch("/api/payram/create_payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ACP_API_KEY}`,
+        },
+        body: JSON.stringify({
+          amount_cents: total,
+          reference_id: referenceId,
+          metadata: { store_slug: "sunnyvale-onions-and-honey" },
+        }),
+      });
+
+      const intentPayload = await readApiResponse(intentResp);
+      setTechnicalResponse(intentPayload);
+
+      if (!intentResp.ok) {
+        throw new Error(
+          getResponseMessage(
+            intentPayload,
+            `PayRam intent request failed with HTTP ${intentResp.status}`,
+          ),
+        );
+      }
+
+      const intentData = intentPayload as { token?: string };
+
+      // Step C: invoke the PayRam JS SDK loaded by <Script> in checkout/page.tsx.
+      // Typed loosely because the v3 SDK ships no TypeScript declarations.
+      type PayRamSDK = (
+        operatorUrl: string,
+        opts: { merchantId: string },
+      ) => {
+        processCardOnramp: (args: {
+          paymentToken: string;
+          card: { name: string; number: string; expiry: string; cvc: string };
+        }) => Promise<{ status: string }>;
+      };
+      const win = window as unknown as { PayRam?: PayRamSDK };
+      if (typeof win.PayRam !== "function") {
+        throw new Error(
+          "PayRam SDK not loaded yet. Refresh the page and try again.",
+        );
+      }
+
+      const payram = win.PayRam(PAYRAM_OPERATOR_URL, {
+        merchantId: PAYRAM_MERCHANT_ID_PUBLIC,
+      });
+      setPayramStatus("processing");
+
+      const result = await payram.processCardOnramp({
+        paymentToken: intentData.token ?? "",
+        card: {
+          name: payramCardholderName.trim(),
+          number: payramCardNumber.trim(),
+          expiry: payramExpiry.trim(),
+          cvc: payramCvc.trim(),
+        },
+      });
+
+      setTechnicalResponse(result);
+
+      if (result.status === "processing" || result.status === "completed") {
+        setPayramStatus("submitted");
+        clearCart();
+        router.push(
+          `/confirmation?${new URLSearchParams({
+            order_id: referenceId,
+            processor: "payram",
+            status: result.status,
+          }).toString()}`,
+        );
+      } else {
+        throw new Error(`PayRam returned unexpected status: ${result.status}`);
+      }
+    } catch (payramError) {
+      setPayramStatus("idle");
+      throw payramError;
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
@@ -400,6 +503,12 @@ export default function CheckoutForm(
     setTechnicalResponse(null);
 
     try {
+      // [showcase: payram] - PayRam mode has its own submission flow
+      if (checkoutMode === "payram") {
+        await handlePayramSubmit();
+        return;
+      }
+
       if (!ACP_CONFIGURED) {
         throw new Error(
           "ACP auth is not configured. Set NEXT_PUBLIC_ACP_API_KEY.",
@@ -585,6 +694,13 @@ export default function CheckoutForm(
       });
     }
 
+      // [showcase: payram] - card-to-crypto onramp via PayRam Operator
+      options.push({
+        mode: "payram",
+        label: "PayRam card-to-crypto",
+        enabled: PAYRAM_CONFIGURED,
+      });
+
     return (
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
@@ -763,6 +879,75 @@ export default function CheckoutForm(
     );
   }
 
+    // [showcase: payram] - plain card inputs for the PayRam headless onramp path.
+    // Card data is passed directly to the PayRam SDK; Evervault is not involved.
+    function renderPayramCardEntry() {
+      return (
+        <div className="space-y-4">
+          <p className="text-xs text-gray-500">
+            Card details are submitted to your PayRam Operator instance for card-to-crypto onramp processing.
+          </p>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--color-brown)]">Cardholder name</span>
+            <input
+              type="text"
+              value={payramCardholderName}
+              onChange={(e) => setPayramCardholderName(e.target.value)}
+              placeholder="Alex Onion"
+              autoComplete="cc-name"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--color-brown)]">Card number</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={payramCardNumber}
+              onChange={(e) => setPayramCardNumber(e.target.value)}
+              placeholder="4242 4242 4242 4242"
+              autoComplete="cc-number"
+              maxLength={19}
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+            />
+          </label>
+          <div className="flex gap-3">
+            <label className="block space-y-2 flex-1">
+              <span className="text-sm font-medium text-[var(--color-brown)]">Expiry (MM/YY)</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={payramExpiry}
+                onChange={(e) => setPayramExpiry(e.target.value)}
+                placeholder="MM/YY"
+                autoComplete="cc-exp"
+                maxLength={5}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+              />
+            </label>
+            <label className="block space-y-2 w-28">
+              <span className="text-sm font-medium text-[var(--color-brown)]">CVC</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={payramCvc}
+                onChange={(e) => setPayramCvc(e.target.value)}
+                placeholder="123"
+                autoComplete="cc-csc"
+                maxLength={4}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[var(--color-amber-dark)] focus:ring-2 focus:ring-[var(--color-amber)]/20"
+              />
+            </label>
+          </div>
+          {payramStatus === "processing" && (
+            <p className="text-xs text-amber-700">
+              Converting fiat to on-chain stablecoin - please wait...
+            </p>
+          )}
+        </div>
+      );
+    }
+
   function isSubmitDisabled() {
     if (submitting || !ACP_CONFIGURED) {
       return true;
@@ -780,6 +965,16 @@ export default function CheckoutForm(
     if (checkoutMode === "saved_evervault") {
       return selectedSavedPaymentId.length === 0;
     }
+
+      // [showcase: payram]
+      if (checkoutMode === "payram") {
+        return (
+          !PAYRAM_CONFIGURED ||
+          !payramCardNumber.trim() ||
+          !payramExpiry.trim() ||
+          !payramCvc.trim()
+        );
+      }
 
     if (activeProcessor !== "stripe") {
       return true;
@@ -845,6 +1040,16 @@ export default function CheckoutForm(
 
         {checkoutMode === "stripe_spt" && renderDelegatedStripeToken()}
 
+          {/* [showcase: payram] */}
+          {checkoutMode === "payram" &&
+            (PAYRAM_CONFIGURED ? (
+              renderPayramCardEntry()
+            ) : (
+              <p className="text-sm text-red-700 bg-red-50 rounded-lg p-3">
+                PayRam is not configured. Add NEXT_PUBLIC_PAYRAM_OPERATOR_URL and NEXT_PUBLIC_PAYRAM_MERCHANT_ID.
+              </p>
+            ))}
+
         {evervaultLoadError && checkoutMode === "card" && (
           <p className="text-sm text-red-700 bg-red-50 rounded-lg p-3">
             Evervault UI Components failed to load. Please refresh and try again.
@@ -879,7 +1084,9 @@ export default function CheckoutForm(
       >
         {submitting ? "Processing..." : `Pay $${(total / 100).toFixed(2)} `}
         <span style={{ fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
-          (No real-life payments will be processed. This payment will be sent to {formatActiveProcessorLabel(activeProcessor)}'s sandbox, which will return a simulated response.)
+           {checkoutMode === "payram"
+            ? "(Demo - calls your PayRam Operator instance for card-to-crypto onramp. No real fiat charged.)"
+            : `(No real-life payments will be processed. This payment will be sent to ${formatActiveProcessorLabel(activeProcessor)}'s sandbox, which will return a simulated response.)`}
         </span>
       </button>
     </form>
