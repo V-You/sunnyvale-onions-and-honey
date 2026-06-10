@@ -3,6 +3,7 @@ PRD*.md
 NOTES.md
 bak/
 .tmp
+.agents
 Sunnyvale-OH*.md
 *.code-workspace
 tmp/
