@@ -631,10 +631,13 @@ export default function CheckoutForm(
 
   function renderPaymentModeTabs() {
     const options: Array<{ mode: CheckoutMode; label: string; enabled: boolean }> = [
-      { mode: "card", label: "New card", enabled: true },
+      { 
+        mode: "card", 
+        label: "Credit card", 
+        enabled: true },
       {
         mode: "saved_evervault",
-        label: "Saved card",
+        label: "Credit card (saved)",
         enabled: savedPayments.length > 0,
       },
     ];
@@ -642,7 +645,7 @@ export default function CheckoutForm(
     if (activeProcessor === "stripe") {
       options.push({
         mode: "stripe_spt",
-        label: "Saved card (Stripe token)",
+        label: "Credit card (Stripe token)",
         enabled: true,
       });
     }
@@ -650,7 +653,7 @@ export default function CheckoutForm(
       // [showcase: payram] - card-to-crypto onramp via PayRam Operator
       options.push({
         mode: "payram",
-        label: "Card &amp; pay less",
+        label: "Credit card &amp; pay less",
           enabled: true,
       });
 
