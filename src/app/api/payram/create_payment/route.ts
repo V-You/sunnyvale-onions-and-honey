@@ -29,12 +29,10 @@ interface PayRamCreatePaymentRequest {
 }
 
 interface PayRamOperatorPayload {
-  amount: number;
-  currency: string;
-  chain: string;
-  merchant_id: string;
-  reference_id: string;
-  metadata?: Record<string, string>;
+  // API field names from docs.payram.com/api-integration/payments-api/create-payment
+  customerEmail: string;
+  customerID: string;
+  amountInUSD: number;
 }
 
 interface PayRamCreatePaymentResponse {
@@ -101,30 +99,26 @@ export async function POST(request: NextRequest) {
     return acpJson({ error: "reference_id is required" }, { status: 400 });
   }
 
-  // PAYRAM_DEFAULT_CHAIN=84532 (Base Sepolia testnet) and
-  // PAYRAM_DEFAULT_CURRENCY=USD are configured in Cloudflare env.
-  const chain = body.chain ?? env.PAYRAM_DEFAULT_CHAIN ?? "84532";
-  const currency = body.currency ?? env.PAYRAM_DEFAULT_CURRENCY ?? "USD";
-  // PayRam API expects a decimal amount, not cents
-  const amount = body.amount_cents / 100;
+  // PayRam API expects a decimal USD amount, not cents
+  const amountInUSD = body.amount_cents / 100;
 
+  // customerID is the Sunnyvale reference_id - used for reconciliation on the
+  // PayRam operator side. customerEmail is a placeholder because Sunnyvale
+  // does not collect customer emails during checkout.
   const operatorPayload: PayRamOperatorPayload = {
-    amount,
-    currency,
-    chain,
-    merchant_id: merchantId,
-    reference_id: body.reference_id,
-    ...(body.metadata ? { metadata: body.metadata } : {}),
+    customerEmail: `checkout+${body.reference_id.replace(/[^a-z0-9]/gi, "-")}@sunnyvale-demo.local`,
+    customerID: body.reference_id,
+    amountInUSD,
   };
 
   let operatorResponse: Response;
   try {
     operatorResponse = await fetch(
-      `${operatorBaseUrl.replace(/\/$/, "")}/api/v3/payments/create_payment`,
+      `${operatorBaseUrl.replace(/\/$/, "")}/api/v1/payment`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${merchantKey}`,
+          "API-Key": merchantKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(operatorPayload),
