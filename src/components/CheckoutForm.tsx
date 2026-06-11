@@ -650,7 +650,7 @@ export default function CheckoutForm(
       // [showcase: payram] - card-to-crypto onramp via PayRam Operator
       options.push({
         mode: "payram",
-        label: "Card Safe+",
+        label: "Card &amp; pay less",
           enabled: true,
       });
 
@@ -671,6 +671,7 @@ export default function CheckoutForm(
             {option.label}
           </button>
         ))}
+        <br />
       </div>
     );
   }

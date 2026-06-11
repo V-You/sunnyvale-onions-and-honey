@@ -27,7 +27,7 @@ const footerEntries: FooterModalEntry[] = [
   {
     key: "acp",
     label: "ACP-ready",
-    title: "ACP-ready",
+    title: "Agentic Commerce Protocol",
     sections: [
       {
         heading: "Agent-friendly",
@@ -47,7 +47,7 @@ const footerEntries: FooterModalEntry[] = [
   },
   {
     key: "evervault",
-    label: "Powered by Evervault",
+    label: "EV-powered",
     title: "Powered by Evervault",
     sections: [
       {
