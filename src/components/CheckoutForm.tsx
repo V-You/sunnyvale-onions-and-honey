@@ -842,8 +842,7 @@ export default function CheckoutForm(
       <div className="space-y-3">
         <p className="text-sm text-gray-600">
           You will be redirected to a PayRam-hosted checkout page to complete your
-          payment. Your card details are entered on the PayRam operator side -
-          the storefront never sees them.
+          payment.
         </p>
         <p className="text-xs text-gray-400">
           Chain: Base Sepolia (84532) - Currency: USD
@@ -982,12 +981,12 @@ export default function CheckoutForm(
       <button
         type="submit"
         disabled={isSubmitDisabled()}
-        className="w-full py-3 rounded-lg font-semibold text-white bg-[var(--color-green-dark)] hover:bg-[var(--color-green-mid)] transition-colors disabled:opacity-60"
+        className="w-full py-4 px-8 rounded-full font-bold text-white text-base bg-[var(--color-green-dark)] hover:bg-[var(--color-green-mid)] active:brightness-95 transition-all shadow-md hover:shadow-lg disabled:opacity-60 flex flex-col items-center justify-center"
       >
         {submitting || payramStatus === "redirecting" ? "Processing..." : `Pay $${(total / 100).toFixed(2)} `}
-        <span style={{ fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
+        <span style={{ fontWeight:"300", fontSize: "0.75em", display: "block", marginTop: "0.25em" }}>
            {checkoutMode === "payram"
-            ? "(DEMO: Card-to-crypto onramp. Payment in USD.)"
+            ? "DEMO: Card-to-crypto onramp, USD. No actual payment."
             : `(No real-life payments will be processed. This payment will be sent to ${formatActiveProcessorLabel(activeProcessor)}'s sandbox, which will return a simulated response.)`}
         </span>
       </button>
