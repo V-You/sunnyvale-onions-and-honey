@@ -87,6 +87,14 @@ Use this pattern when adding PayRam to a storefront that already has a normal ca
 6. Redirect the browser to the PayRam-hosted experience.
 7. Receive the confirmation back in Sunnyvale through the normal success / webhook path and then update inventory, metrics, and confirmation screens.
 
+Implementation note - docs to use as source of truth for payment creation:
+
+- Use https://docs.payram.com/api-integration/payments-api/create-payment for backend payment-link creation.
+- For this endpoint, use `POST /api/v1/payment` with `API-Key` header (not bearer auth).
+- Request body fields are `customerEmail`, `customerID`, and `amountInUSD`.
+- Response includes a hosted payment page URL in `url`.
+- Do not infer endpoint paths from older examples such as `/api/v3/payments/create_payment` unless explicitly confirmed in the current API-integration docs.
+
 Use that same "operator-mode pattern" for any future test shops (Evevault or not, existing card rails or not): keep the storefront simple, keep the merchant key server-side, let the backend broker the PayRam session. 
 
 ## Cloudflare deployment note
