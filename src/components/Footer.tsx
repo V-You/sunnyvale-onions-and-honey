@@ -73,15 +73,17 @@ const footerEntries: FooterModalEntry[] = [
           (
             <>
               <ul>
-                <li><strong>Own 100% of their tokenized card data</strong> without vendor lock-in (PSP vaults).</li>
+                <li><strong>Own 100% of their tokenized card data</strong> without PSP lock-in.</li>
                 <li><strong>Stay PCI-compliant (SAQ A)</strong> without ever handling card data.</li>
-                <li><strong>Hot-swap payment processors</strong>  in seconds via env var and redeploy.</li>
-                <li><strong>Serve AI shopping agents</strong> via the <u><a href="https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json">ACP</a></u>, alongside regular shoppers.</li>
-                <li><strong>Stay just as PSP-agnostic for agentic payments</strong> &ndash; not locked into agent's preference.</li>
+                <li><strong>Hot-swap payment processors</strong> in seconds (env var + redeploy).</li>
+                <li><strong>Serve AI shopping agents</strong> via <u><a href="https://sunnyvale-onions-and-honey.pages.dev/.well-known/acp.json">ACP</a></u>, alongside regular shoppers.</li>
+                <li><strong>Stay PSP-agnostic for agentic payments</strong>, not locked into agent preference.</li>
               </ul>
               <br />
-              <p>This shop used <u><a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a></u>, a server that automates Relay setup and integration, and puts docs-as-action at your fingertips during development.
+              <p>This shop was developed using <u><a href="https://github.com/V-You/evervault-architect-mcp">Evervault Architect MCP</a></u>, an MCP server that automates <em>Relay</em> setup and integration, and puts docs-as-action at your fingertips.
               </p>
+              <br />
+              <p className="note-alert">This shop is not able to pick up full card numbers. No card number, real or not, is saved unencrypted. Encrypted numbers cannot be decrypted by the shop.</p>
             </>
           ),
       },

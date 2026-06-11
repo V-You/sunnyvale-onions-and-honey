@@ -633,11 +633,11 @@ export default function CheckoutForm(
     const options: Array<{ mode: CheckoutMode; label: string; enabled: boolean }> = [
       { 
         mode: "card", 
-        label: "Credit card", 
+        label: "1. Credit card", 
         enabled: true },
       {
         mode: "saved_evervault",
-        label: "Credit card (saved)",
+        label: "2. Credit card (saved)",
         enabled: savedPayments.length > 0,
       },
     ];
@@ -645,7 +645,7 @@ export default function CheckoutForm(
     if (activeProcessor === "stripe") {
       options.push({
         mode: "stripe_spt",
-        label: "Credit card (Stripe token)",
+        label: "2b. Credit card (Stripe token)",
         enabled: true,
       });
     }
@@ -653,12 +653,12 @@ export default function CheckoutForm(
       // [showcase: payram] - card-to-crypto onramp via PayRam Operator
       options.push({
         mode: "payram",
-        label: "Credit card & pay less",
+        label: "3. Credit card & pay less",
           enabled: true,
       });
 
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-start gap-2">
         {options.map((option) => (
           <button
             key={option.mode}
@@ -928,7 +928,7 @@ export default function CheckoutForm(
 
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <div className="space-y-3">
-          <h2 className="font-semibold text-lg" title="Active processor: {formatActiveProcessorLabel(activeProcessor)}">Available payment options</h2>
+          <h2 className="font-semibold text-lg" title="Active processor: {formatActiveProcessorLabel(activeProcessor)}">Available payment options:</h2>
           {/*<!-- p className="text-sm text-gray-500">
             Active processor: {formatActiveProcessorLabel(activeProcessor)}
           </p -->*/}
