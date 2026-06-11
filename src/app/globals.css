@@ -121,8 +121,8 @@ footer div button:hover {
 
 
 /* --- */
-h2        {font-size:1rem;letter-spacing: -0.05rem;}
-
+h2            {font-size:1rem;letter-spacing: -0.05rem;}
+p.note-alert  {color:red;font-weight:600}
 
 @media screen and (min-width: 340px) and (max-width: 768px) {
   /* CSS rules for this screen range */
@@ -130,8 +130,8 @@ h2        {font-size:1rem;letter-spacing: -0.05rem;}
   width: 96px;
   height: 96px;
   position:absolute;
-  top:32px;
-  left:50%;
+  top:22px;
+  left:22px;
   transform: translate(50%, 0);
   z-index: 111;
 }

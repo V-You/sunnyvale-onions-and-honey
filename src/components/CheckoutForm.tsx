@@ -653,19 +653,19 @@ export default function CheckoutForm(
       // [showcase: payram] - card-to-crypto onramp via PayRam Operator
       options.push({
         mode: "payram",
-        label: "Credit card &amp; pay less",
+        label: "Credit card & pay less",
           enabled: true,
       });
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         {options.map((option) => (
           <button
             key={option.mode}
             type="button"
             disabled={!option.enabled}
             onClick={() => setCheckoutMode(option.mode)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`inline-block rounded-full px-4 py-2 text-sm font-medium transition ${
               checkoutMode === option.mode
                 ? "bg-[var(--color-green-dark)] text-[var(--color-cream)]"
                 : "bg-gray-100 text-[var(--color-green-dark)] hover:bg-gray-200"
@@ -674,7 +674,6 @@ export default function CheckoutForm(
             {option.label}
           </button>
         ))}
-        <br />
       </div>
     );
   }
@@ -923,11 +922,13 @@ export default function CheckoutForm(
             ${(total / 100).toFixed(2)}
           </span>
         </div>
+        <hr />
+        <p className="note-alert">Reminder: This is a fake shop</p>
       </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
         <div className="space-y-3">
-          <h2 className="font-semibold text-lg" title="Active processor: {formatActiveProcessorLabel(activeProcessor)}">Payment details (Reminder: This is a fake shop)</h2>
+          <h2 className="font-semibold text-lg" title="Active processor: {formatActiveProcessorLabel(activeProcessor)}">Available payment options</h2>
           {/*<!-- p className="text-sm text-gray-500">
             Active processor: {formatActiveProcessorLabel(activeProcessor)}
           </p -->*/}
